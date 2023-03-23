@@ -9,13 +9,16 @@ all: $(PROGS)
 %.o: %.c
 	$(CC) -c $< $(CFLAGS)
 
+%.so: %.c
+	$(CC) -o $@ $< $(CFLAGS) --shared
+
 chals: chals.o libpoem.so
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 libpoem.so: libpoem.o
 	$(CC) -o $@ -shared $^ $(LDFLAGS)
 
-test:
+test: libsolver.so
 	LD_LIBRARY_PATH=`pwd` LD_PRELOAD=./libsolver.so ./chals
 
 run:
