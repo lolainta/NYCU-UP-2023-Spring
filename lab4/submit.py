@@ -28,10 +28,10 @@ if os.path.exists(exe):
     with open(exe, 'rb') as f:
         payload = f.read()
 
-r = process("./remoteguess", shell=True)
+# r = process("./remoteguess", shell=True)
 # gdb.attach(r,'break 104; continue')
 # r = remote("localhost", 10816)
-# r = remote("up23.zoolab.org", 10816)
+r = remote("up23.zoolab.org", 10816)
 
 if type(r) != pwnlib.tubes.process.process:
     solve_pow(r)
