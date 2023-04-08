@@ -6,8 +6,8 @@ PROGS	= sandbox.so
 
 all: $(PROGS)
 
-%.so: %.cpp
-	$(CPP) -o $@ $< $(CFLAGS) --shared
+%.so: %.cpp elf-parser.c
+	$(CPP) -o $@ $< elf-parser.c $(CFLAGS) --shared
 
 example1: launcher ./sandbox.so
 	./launcher ./sandbox.so config.txt cat /etc/passwd
