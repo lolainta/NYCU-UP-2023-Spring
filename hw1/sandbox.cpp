@@ -8,6 +8,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <elf.h>
+#include <cassert>
+#include "elf-parser.h"
 
 using namespace std;
 using str=string;
@@ -29,7 +32,6 @@ ull mp_on(string&cmd){
             sscanf(line.c_str(),"%llx-%llx ",&lb,&ub);
             if(!ret)
                 ret=lb;
-            cout<<hex<<lb<<' '<<ub<<endl;
             if(mprotect((void*)lb,ub-lb,PROT_READ|PROT_WRITE|PROT_EXEC)==-1){
                 perror("mprotect");
                 exit(1);
@@ -42,7 +44,23 @@ ull mp_on(string&cmd){
 }
 
 ull get_offset(const str&cmd,const str&target){
-    return 0x8f70ull;
+//    ifstream fin(cmd,ios::binary|ios::in);
+//    fin.read((char*)&elf_hdr,sizeof(elf_hdr));
+    int fd=open(cmd.c_str(),O_RDONLY|O_SYNC);
+    Elf32_Ehdr eh;
+    read_elf_header(fd,&eh);
+    assert(is_ELF(eh));
+    assert(is64Bit(eh));
+
+    Elf64_Ehdr eh64;
+    read_elf_header64(fd,&eh64);
+    print_elf_header64(eh64);
+    Elf64_Shdr*sh_tbl=(Elf64_Shdr*)malloc(eh64.e_shentsize*eh64.e_shnum);
+    read_section_header_table64(fd,eh64,sh_tbl);
+    print_section_headers64(fd,eh64,sh_tbl);
+    print_symbols64(fd,eh64,sh_tbl);
+
+    return 0x2df60ull;
 }
 
 static int open_api(const char*path,int oflag){
@@ -55,7 +73,7 @@ int __libc_start_main(main_t main_func,int argc,char**ubp_av,void(*init_func)(),
     cout<<"pid: "<<getpid()<<endl;
     str cmd=ubp_av[0];
     ull lb=mp_on(cmd);
-    cout<<"lb: "<<lb<<endl;
+    cout<<"lb: "<<hex<<lb<<endl;
     cout<<"cmd: "<<cmd<<endl;
 
     vector<pair<string,ull>> hooks;
@@ -63,6 +81,7 @@ int __libc_start_main(main_t main_func,int argc,char**ubp_av,void(*init_func)(),
 
     for(auto hook:hooks){
         ull offset=get_offset(cmd,hook.first);
+        cout<<"offset: "<<offset<<endl;
         unsigned long*addr=(unsigned long*)(lb+offset);
         *addr=hook.second;
     }
