@@ -8,23 +8,36 @@ all: $(PROGS)
 
 %.so: %.cpp
 	$(CPP) -o $@ $< $(CFLAGS) --shared
-test: launcher sandbox.so
-	@echo Example 1
+
+example1: launcher ./sandbox.so
 	./launcher ./sandbox.so config.txt cat /etc/passwd
-	@echo Example 2
+
+example2: launcher ./sandbox.so
 	./launcher ./sandbox.so config.txt cat /etc/hosts
-	@echo Example 3
+
+example3: launcher ./sandbox.so
 	./launcher ./sandbox.so config.txt cat /etc/ssl/certs/Amazon_Root_CA_1.pem
-	@echo Example 4
-	@echo Deleted
-	@echo Example 5
+
+example5: launcher ./sandbox.so
 	./launcher ./sandbox.so config.txt wget http://google.com -t 1
-	@echo Example 6
+
+example6: launcher ./sandbox.so
 	./launcher ./sandbox.so config.txt wget https://www.nycu.edu.tw -t 1
-	@echo Example 7
+
+example7: launcher ./sandbox.so
 	./launcher ./sandbox.so config.txt wget http://www.google.com -q -t 1
-	@echo Example 8
+
+example8: launcher ./sandbox.so
 	./launcher ./sandbox.so config.txt python3 -c 'import os;os.system("wget http://www.google.com -q -t 1")'
+
+test:
+	make example1
+	make example2
+	make example3
+	make example5
+	make example6
+	make example7
+	make example8
 
 clean:
 	rm -f $(PROGS)
