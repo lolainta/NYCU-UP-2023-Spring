@@ -8,7 +8,6 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <dlfcn.h>
-
 #include "elf-parser.h"
 
 using namespace std;

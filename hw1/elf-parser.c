@@ -334,7 +334,6 @@ void print_symbol_table64(int32_t fd,
 	printf("%d symbols\n", symbol_count);
 
 	for(i=0; i< symbol_count; i++) {
-        printf("%02d: ",i);
 		printf("0x%08lx ", sym_tbl[i].st_value);
 		printf("0x%02x ", ELF32_ST_BIND(sym_tbl[i].st_info));
 		printf("0x%02x ", ELF32_ST_TYPE(sym_tbl[i].st_info));
