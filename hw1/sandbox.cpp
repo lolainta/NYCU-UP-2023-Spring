@@ -1,15 +1,14 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <string.h>
-#include <vector>
-#include <bits/stdc++.h>
-#include <dlfcn.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <elf.h>
 #include <cassert>
+#include <vector>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <dlfcn.h>
+
 #include "elf-parser.h"
 
 using namespace std;
@@ -49,7 +48,7 @@ ull get_offset(const str&cmd,const str&target){
     int fd=open(cmd.c_str(),O_RDONLY|O_SYNC);
     Elf32_Ehdr eh;
     read_elf_header(fd,&eh);
-    assert(is_ELF(eh));
+//    assert(is_ELF(eh));
     assert(is64Bit(eh));
 
     Elf64_Ehdr eh64;
@@ -71,8 +70,8 @@ ull get_offset(const str&cmd,const str&target){
 
     for(size_t i=0;i<eh64.e_shnum;++i){
         if(sh_tbl[i].sh_type==SHT_RELA){
-            cout<<"link: "<<sh_tbl[i].sh_link<<endl;
-            cout<<"Got relocation section at i="<<i<<endl;
+//            cout<<"link: "<<sh_tbl[i].sh_link<<endl;
+//            cout<<"Got relocation section at i="<<i<<endl;
             Elf64_Rela*rela_tbl=(Elf64_Rela*)read_section64(fd,sh_tbl[i]);
             for(size_t j=0;j<sh_tbl[i].sh_size/sh_tbl[i].sh_entsize;j++){
 //                cout<<i<<' '<<j<<endl;
@@ -97,12 +96,30 @@ int open_api(const char*path,int oflag){
     return open(path,oflag);
 }
 
-int read_api(int fildes,void*buf,size_t nbyte){
+ssize_t read_api(int fildes,void*buf,size_t nbyte){
     log<<"read"<<endl;
     return read(fildes,buf,nbyte);
 }
 
+int write_api(int fildes,void*buf,size_t nbyte){
+    log<<"write"<<endl;
+    return write(fildes,buf,nbyte);
+}
 
+int connect_api(int socket,const struct sockaddr*address,socklen_t address_len){
+    log<<"connect"<<endl;
+    return connect(socket,address,address_len);
+}
+
+int getaddrinfo_api(const char*node,const char*service,const struct addrinfo*hints,struct addrinfo**res){
+    log<<"getaddrinfo"<<endl;
+    return getaddrinfo(node,service,hints,res);
+}
+
+int system_api(const char*command){
+    log<<"system"<<endl;
+    return system(command);
+}
 
 extern "C"
 int __libc_start_main(main_t main_func,int argc,char**ubp_av,void(*init_func)(),void(*fini_func)(),void(*rtld_fini_func)(),void*stack_end){
@@ -115,14 +132,19 @@ int __libc_start_main(main_t main_func,int argc,char**ubp_av,void(*init_func)(),
     vector<pair<string,ull>> hooks;
     hooks.emplace_back("open",(ull)&open_api);
     hooks.emplace_back("read",(ull)&read_api);
+    hooks.emplace_back("write",(ull)&write_api);
+    hooks.emplace_back("connect",(ull)&connect_api);
+    hooks.emplace_back("getaddrinfo",(ull)&getaddrinfo_api);
+    hooks.emplace_back("system",(ull)&system_api);
 
     for(auto hook:hooks){
         ull offset=get_offset(cmd,hook.first);
         if(offset==0xdeadbeaf){
-            cout<<"ERROR: off_set not found"<<endl;
+            cout<<"WARNING: off_set not found for "<<hook.first<<endl;
+            continue;
             exit(1);
         }
-        cout<<"offset: "<<offset<<endl;
+        cout<<hook.first<<" offset="<<offset<<endl;
         unsigned long*addr=(unsigned long*)(lb+offset);
         *addr=hook.second;
     }
