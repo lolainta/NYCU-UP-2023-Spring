@@ -54,19 +54,55 @@ ull get_offset(const str&cmd,const str&target){
 
     Elf64_Ehdr eh64;
     read_elf_header64(fd,&eh64);
-    print_elf_header64(eh64);
+ //   print_elf_header64(eh64);
     Elf64_Shdr*sh_tbl=(Elf64_Shdr*)malloc(eh64.e_shentsize*eh64.e_shnum);
     read_section_header_table64(fd,eh64,sh_tbl);
-    print_section_headers64(fd,eh64,sh_tbl);
-    print_symbols64(fd,eh64,sh_tbl);
+//    print_section_headers64(fd,eh64,sh_tbl);
+//    print_symbols64(fd, eh64, sh_tbl);
 
-    return 0x2df60ull;
+    Elf64_Sym*sym_tbl;
+    char*str_tbl;
+    for(int i=0;i<eh64.e_shnum;++i){
+        if(sh_tbl[i].sh_type==SHT_SYMTAB || sh_tbl[i].sh_type==SHT_DYNSYM){
+            sym_tbl=(Elf64_Sym*)read_section64(fd,sh_tbl[i]);
+            str_tbl=read_section64(fd,sh_tbl[sh_tbl[i].sh_link]);
+        }
+    }
+
+    for(size_t i=0;i<eh64.e_shnum;++i){
+        if(sh_tbl[i].sh_type==SHT_RELA){
+            cout<<"link: "<<sh_tbl[i].sh_link<<endl;
+            cout<<"Got relocation section at i="<<i<<endl;
+            Elf64_Rela*rela_tbl=(Elf64_Rela*)read_section64(fd,sh_tbl[i]);
+            for(size_t j=0;j<sh_tbl[i].sh_size/sh_tbl[i].sh_entsize;j++){
+//                cout<<i<<' '<<j<<endl;
+                size_t sym_idx=ELF64_R_SYM(rela_tbl[j].r_info);
+//                printf("sym_idx: %02d ",sym_idx);
+//                printf("sym_name: %s \n",(str_tbl+sym_tbl[sym_idx].st_name));
+                if(str(str_tbl+sym_tbl[sym_idx].st_name)==target){
+                    return rela_tbl[j].r_offset;
+                }
+			}
+        }else if(sh_tbl[i].sh_type==SHT_REL){
+            cout<<"Got SHT_REL"<<endl;
+        }
+    }
+    return 0xdeadbeaf;
 }
 
-static int open_api(const char*path,int oflag){
-    cout<<"My open"<<endl;
+#define log cout<<"[logger] "
+
+int open_api(const char*path,int oflag){
+    log<<"open"<<endl;
     return open(path,oflag);
 }
+
+int read_api(int fildes,void*buf,size_t nbyte){
+    log<<"read"<<endl;
+    return read(fildes,buf,nbyte);
+}
+
+
 
 extern "C"
 int __libc_start_main(main_t main_func,int argc,char**ubp_av,void(*init_func)(),void(*fini_func)(),void(*rtld_fini_func)(),void*stack_end){
@@ -78,9 +114,14 @@ int __libc_start_main(main_t main_func,int argc,char**ubp_av,void(*init_func)(),
 
     vector<pair<string,ull>> hooks;
     hooks.emplace_back("open",(ull)&open_api);
+    hooks.emplace_back("read",(ull)&read_api);
 
     for(auto hook:hooks){
         ull offset=get_offset(cmd,hook.first);
+        if(offset==0xdeadbeaf){
+            cout<<"ERROR: off_set not found"<<endl;
+            exit(1);
+        }
         cout<<"offset: "<<offset<<endl;
         unsigned long*addr=(unsigned long*)(lb+offset);
         *addr=hook.second;

@@ -273,7 +273,7 @@ char * read_section64(int32_t fd, Elf64_Shdr sh)
 
 	assert(buff != NULL);
 	assert(lseek(fd, (off_t)sh.sh_offset, SEEK_SET) == (off_t)sh.sh_offset);
-	assert(read(fd, (void *)buff, sh.sh_size) == sh.sh_size);
+	assert(read(fd, (void *)buff, sh.sh_size) == (ssize_t)sh.sh_size);
 
 	return buff;
 }
@@ -334,6 +334,7 @@ void print_symbol_table64(int32_t fd,
 	printf("%d symbols\n", symbol_count);
 
 	for(i=0; i< symbol_count; i++) {
+        printf("%02d: ",i);
 		printf("0x%08lx ", sym_tbl[i].st_value);
 		printf("0x%02x ", ELF32_ST_BIND(sym_tbl[i].st_info));
 		printf("0x%02x ", ELF32_ST_TYPE(sym_tbl[i].st_info));
@@ -382,13 +383,13 @@ void save_text_section64(int32_t fd, Elf64_Ehdr eh, Elf64_Shdr sh_table[])
 		}
 	}
 
-	assert(lseek(fd, sh_table[i].sh_offset, SEEK_SET)==sh_table[i].sh_offset);
+	assert(lseek(fd, sh_table[i].sh_offset, SEEK_SET)==(ssize_t)sh_table[i].sh_offset);
 	buf = (char*)malloc(sh_table[i].sh_size);
 	if(!buf) {
 		printf("Failed to allocate %ldbytes!!\n", sh_table[i].sh_size);
 		goto EXIT;
 	}
-	assert(read(fd, buf, sh_table[i].sh_size)==sh_table[i].sh_size);
+	assert(read(fd, buf, sh_table[i].sh_size)==(ssize_t)sh_table[i].sh_size);
 	fd2 = open(pwd, O_RDWR|O_SYNC|O_CREAT, 0644);
 	write(fd2, buf, sh_table[i].sh_size);
 	fsync(fd2);
