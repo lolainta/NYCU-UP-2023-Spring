@@ -136,6 +136,9 @@ int __libc_start_main(main_t main_func,int argc,char**ubp_av,void(*init_func)(),
     hooks.emplace_back("getaddrinfo",(ull)&getaddrinfo_api);
     hooks.emplace_back("system",(ull)&system_api);
 
+    cout<<"config path: "<<getenv("SANDBOX_CONFIG")<<endl;
+    cout<<"Logger fd: "<<getenv("LOGGER_FD")<<endl;
+
     for(auto hook:hooks){
         ull offset=get_offset(cmd,hook.first);
         if(offset==0xdeadbeaf){
