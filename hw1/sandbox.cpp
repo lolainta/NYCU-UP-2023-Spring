@@ -88,35 +88,43 @@ ull get_offset(const str&cmd,const str&target){
     return 0xdeadbeaf;
 }
 
+int lfd;
+
 #define log cout<<"[logger] "
 
 int open_api(const char*path,int oflag){
-    log<<"open"<<endl;
-    return open(path,oflag);
+    auto ret=open(path,oflag);
+    dprintf(lfd,"[logger] open(\"%s\", %d) = %d\n",path,oflag,ret);
+    return ret;
 }
 
 ssize_t read_api(int fildes,void*buf,size_t nbyte){
-    log<<"read"<<endl;
-    return read(fildes,buf,nbyte);
+    auto ret=read(fildes,buf,nbyte);
+    dprintf(lfd,"[logger] read(%d, %p, %d) = %d\n",fildes,buf,nbyte,ret);
+    return ret;
 }
 
 int write_api(int fildes,void*buf,size_t nbyte){
-    log<<"write"<<endl;
-    return write(fildes,buf,nbyte);
+    auto ret=write(fildes,buf,nbyte);
+    dprintf(lfd,"[logger] write(%d, %p, %d) = %d\n",fildes,buf,nbyte,ret);
+    return ret;
 }
 
 int connect_api(int socket,const struct sockaddr*address,socklen_t address_len){
-    log<<"connect"<<endl;
-    return connect(socket,address,address_len);
+    auto ret=connect(socket,address,address_len);
+    dprintf(lfd,"[logger] connect(%d, \"%s\", %d) = %d\n",socket,"IP",address_len,ret);
+    return ret;
 }
 
 int getaddrinfo_api(const char*node,const char*service,const struct addrinfo*hints,struct addrinfo**res){
-    log<<"getaddrinfo"<<endl;
-    return getaddrinfo(node,service,hints,res);
+    auto ret=getaddrinfo(node,service,hints,res);
+    dprintf(lfd,"[logger] getaddrinfo(\"%s\", \"%s\", %p, %p) = %d\n",node,service,hints,res,ret);
+    return ret;
 }
 
 int system_api(const char*command){
-    log<<"system"<<endl;
+    auto ret=system(command);
+    dprintf(lfd,"[logger] system(\"%s\") = %d\n",command,ret);
     return system(command);
 }
 
@@ -138,6 +146,7 @@ int __libc_start_main(main_t main_func,int argc,char**ubp_av,void(*init_func)(),
 
     cout<<"config path: "<<getenv("SANDBOX_CONFIG")<<endl;
     cout<<"Logger fd: "<<getenv("LOGGER_FD")<<endl;
+    lfd=stoi(getenv("LOGGER_FD"));
 
     for(auto hook:hooks){
         ull offset=get_offset(cmd,hook.first);
