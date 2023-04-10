@@ -100,13 +100,13 @@ int open_api(const char*path,int oflag){
 
 ssize_t read_api(int fildes,void*buf,size_t nbyte){
     auto ret=read(fildes,buf,nbyte);
-    dprintf(lfd,"[logger] read(%d, %p, %d) = %d\n",fildes,buf,nbyte,ret);
+    dprintf(lfd,"[logger] read(%d, %p, %ld) = %ld\n",fildes,buf,nbyte,ret);
     return ret;
 }
 
 int write_api(int fildes,void*buf,size_t nbyte){
     auto ret=write(fildes,buf,nbyte);
-    dprintf(lfd,"[logger] write(%d, %p, %d) = %d\n",fildes,buf,nbyte,ret);
+    dprintf(lfd,"[logger] write(%d, %p, %ld) = %ld\n",fildes,buf,nbyte,ret);
     return ret;
 }
 
