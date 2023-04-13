@@ -42,4 +42,5 @@ test:
 clean:
 	rm -f $(PROGS)
 	rm -f index.html*
+	rm -f *.log
 

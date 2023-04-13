@@ -52,20 +52,21 @@ ull get_offset(const str&cmd,const str&target){
 
     Elf64_Ehdr eh64;
     read_elf_header64(fd,&eh64);
- //   print_elf_header64(eh64);
+//    print_elf_header64(eh64);
     Elf64_Shdr*sh_tbl=(Elf64_Shdr*)malloc(eh64.e_shentsize*eh64.e_shnum);
     read_section_header_table64(fd,eh64,sh_tbl);
 //    print_section_headers64(fd,eh64,sh_tbl);
 //    print_symbols64(fd, eh64, sh_tbl);
 
-    Elf64_Sym*sym_tbl;
-    char*str_tbl;
+    Elf64_Sym*sym_tbl=nullptr;
+    char*str_tbl=nullptr;
     for(int i=0;i<eh64.e_shnum;++i){
         if(sh_tbl[i].sh_type==SHT_SYMTAB || sh_tbl[i].sh_type==SHT_DYNSYM){
             sym_tbl=(Elf64_Sym*)read_section64(fd,sh_tbl[i]);
             str_tbl=read_section64(fd,sh_tbl[sh_tbl[i].sh_link]);
         }
     }
+    assert(sym_tbl && str_tbl);
 
     for(size_t i=0;i<eh64.e_shnum;++i){
         if(sh_tbl[i].sh_type==SHT_RELA){
@@ -90,16 +91,22 @@ ull get_offset(const str&cmd,const str&target){
 
 int lfd;
 
-#define log cout<<"[logger] "
-
-int open_api(const char*path,int oflag){
+int open_api(const char*path,int oflag,...){
+    if(oflag&O_CREAT){
+        cout<<"got O_CREAT in open"<<endl;
+    }else{
+        cout<<"No O_CREAT"<<endl;
+    }
     auto ret=open(path,oflag);
     dprintf(lfd,"[logger] open(\"%s\", %d) = %d\n",path,oflag,ret);
     return ret;
 }
 
 ssize_t read_api(int fildes,void*buf,size_t nbyte){
+    str fname(to_string(getpid())+'-'+to_string(lfd)+"-read.log");
     auto ret=read(fildes,buf,nbyte);
+    FILE*log=fopen(fname.c_str(),"wb");
+    fwrite(buf,sizeof(char),ret,log);
     dprintf(lfd,"[logger] read(%d, %p, %ld) = %ld\n",fildes,buf,nbyte,ret);
     return ret;
 }
