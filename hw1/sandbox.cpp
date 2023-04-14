@@ -61,7 +61,7 @@ ull get_offset(const str&cmd,const str&target){
     Elf64_Sym*sym_tbl=nullptr;
     char*str_tbl=nullptr;
     for(int i=0;i<eh64.e_shnum;++i){
-        if(sh_tbl[i].sh_type==SHT_SYMTAB || sh_tbl[i].sh_type==SHT_DYNSYM){
+        if(sh_tbl[i].sh_type==SHT_DYNSYM){
             sym_tbl=(Elf64_Sym*)read_section64(fd,sh_tbl[i]);
             str_tbl=read_section64(fd,sh_tbl[sh_tbl[i].sh_link]);
         }
@@ -76,7 +76,7 @@ ull get_offset(const str&cmd,const str&target){
             for(size_t j=0;j<sh_tbl[i].sh_size/sh_tbl[i].sh_entsize;j++){
 //                cout<<i<<' '<<j<<endl;
                 size_t sym_idx=ELF64_R_SYM(rela_tbl[j].r_info);
-//                printf("sym_idx: %02d ",sym_idx);
+//                printf("sym_idx: %02ld ",sym_idx);
 //                printf("sym_name: %s \n",(str_tbl+sym_tbl[sym_idx].st_name));
                 if(str(str_tbl+sym_tbl[sym_idx].st_name)==target){
                     return rela_tbl[j].r_offset;
@@ -91,14 +91,13 @@ ull get_offset(const str&cmd,const str&target){
 
 int lfd;
 
-int open_api(const char*path,int oflag,...){
-    if(oflag&O_CREAT){
-        cout<<"got O_CREAT in open"<<endl;
-    }else{
-        cout<<"No O_CREAT"<<endl;
-    }
+int open_api(const char*path,int oflag,mode_t mode){
     auto ret=open(path,oflag);
-    dprintf(lfd,"[logger] open(\"%s\", %d) = %d\n",path,oflag,ret);
+    if(oflag&O_CREAT){
+        dprintf(lfd,"[logger] open(\"%s\", %d, %d) = %d\n",path,oflag,mode,ret);
+    }else{
+        dprintf(lfd,"[logger] open(\"%s\", %d) = %d\n",path,oflag,ret);
+    }
     return ret;
 }
 

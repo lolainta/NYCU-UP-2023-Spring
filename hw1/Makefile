@@ -1,13 +1,21 @@
 CPP		= g++
 CFLAGS	= -Wall -g -D_GNU_SOURCE -fPIC
 LDFLAGS = -lunwind -lunwind-$(shell uname -m)
-PROGS	= sandbox.so
-.PHONY: all test clean
+PROGS	= sandbox.so moon
+.PHONY: all test clean self
 
 all: $(PROGS)
 
+self:
+	./launcher ./sandbox.so configs/config.txt $(shell pwd)/moon
+moon: moon.cpp
+	$(CPP) -o $@ $^
+
+%o: %.cpp
+	$(CPP) -c -o $@ $^
+
 %.so: %.cpp elf-parser.c
-	$(CPP) -o $@ $< elf-parser.c $(CFLAGS) --shared
+	$(CPP) -o $@ $^ $(CFLAGS) --shared
 
 example1: launcher ./sandbox.so
 	./launcher ./sandbox.so config.txt cat /etc/passwd
@@ -43,4 +51,6 @@ clean:
 	rm -f $(PROGS)
 	rm -f index.html*
 	rm -f *.log
+	rm -f *.o
+	rm -f *.tmp
 
