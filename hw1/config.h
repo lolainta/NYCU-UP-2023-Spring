@@ -22,5 +22,6 @@ public:
     bool check_open(cstr&);
     bool check_read(cstr&);
     bool check_connect(cstr&,uint16_t);
+    bool check_getaddrinfo(cstr&);
 };
 #endif

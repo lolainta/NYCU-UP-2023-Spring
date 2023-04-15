@@ -56,21 +56,20 @@ void Config::parse(cstr&fname){
 void Config::show(){
     cout<<dec;
     cout<<"open blacklist:"<<endl;
-    for(auto b:open){
+    for(auto b:open)
         cout<<b<<endl;
-    }
+
     cout<<"read blacklist:"<<endl;
-    for(auto b:read){
+    for(auto b:read)
         cout<<b<<endl;
-    }
+
     cout<<"connect blacklist:"<<endl;
-    for(auto [ip,port]:connect){
+    for(auto [ip,port]:connect)
         cout<<ip<<' '<<port<<endl;
-    }
+
     cout<<"getaddrinfo blacklist:"<<endl;
-    for(auto b:getaddrinfo){
+    for(auto b:getaddrinfo)
         cout<<b<<endl;
-    }
 }
 
 bool Config::check_open(cstr&path){
@@ -86,19 +85,22 @@ bool Config::check_open(cstr&path){
 }
 
 bool Config::check_read(cstr&content){
-    for(auto p:read){
-        if(content.find(p)!=str::npos){
+    for(auto p:read)
+        if(content.find(p)!=str::npos)
             return false;
-        }
-    }
     return true;
 }
 
 bool Config::check_connect(cstr&ip,uint16_t port){
-    for(auto[u,v]:connect){
-        if(u==ip && port==v){
+    for(auto[u,v]:connect)
+        if(u==ip && port==v)
             return false;
-        }
-    }
+    return true;
+}
+
+bool Config::check_getaddrinfo(cstr&node){
+    for(auto p:getaddrinfo)
+        if(p==node)
+            return false;
     return true;
 }

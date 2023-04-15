@@ -164,9 +164,15 @@ int connect_api(int socket,const struct sockaddr*address,socklen_t address_len){
 }
 
 int getaddrinfo_api(const char*node,const char*service,const struct addrinfo*hints,struct addrinfo**res){
-    auto ret=getaddrinfo(node,service,hints,res);
-    dprintf(lfd,"[logger] getaddrinfo(\"%s\", \"%s\", %p, %p) = %d\n",node,service,hints,res,ret);
-    return ret;
+    if(config.check_getaddrinfo(str(node))){
+        auto ret=getaddrinfo(node,service,hints,res);
+        dprintf(lfd,"[logger] getaddrinfo(\"%s\", \"%s\", %p, %p) = %d\n",node,service,hints,res,ret);
+        return ret;
+    }else{
+        dprintf(lfd,"[logger] getaddrinfo(\"%s\", \"%s\", %p, %p) = -1\n",node,service,hints,res);
+        errno=EAI_NONAME;
+        return -1;
+    }
 }
 
 int system_api(const char*command){
