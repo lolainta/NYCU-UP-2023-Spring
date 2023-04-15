@@ -1,5 +1,5 @@
 CPP		= g++
-CFLAGS	= -Wall -g -D_GNU_SOURCE -fPIC
+CFLAGS	= -Wall -g -D_GNU_SOURCE -fPIC -std=gnu++17 -ldl
 LDFLAGS = -lunwind -lunwind-$(shell uname -m)
 PROGS	= sandbox.so moon
 CONFIG_DIR = ./configs
