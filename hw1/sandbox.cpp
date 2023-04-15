@@ -2,13 +2,16 @@
 #include <fstream>
 #include <sstream>
 #include <cassert>
+#include <cerrno>
 #include <vector>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <dlfcn.h>
+
 #include "elf-parser.h"
+#include "config.h"
 
 using namespace std;
 using str=string;
@@ -17,6 +20,8 @@ typedef int(*main_t)(int,char**,char**);
 typedef long long loli;
 typedef unsigned long long ull;
 typedef tuple<ull,ull> tull;
+
+Config config;
 
 ull mp_on(string&cmd){
     str tar=cmd;
@@ -92,13 +97,23 @@ ull get_offset(const str&cmd,const str&target){
 int lfd;
 
 int open_api(const char*path,int oflag,mode_t mode){
-    auto ret=open(path,oflag);
-    if(oflag&O_CREAT){
-        dprintf(lfd,"[logger] open(\"%s\", %d, %d) = %d\n",path,oflag,mode,ret);
+    if(config.check_open(str(path))){
+        auto ret=open(path,oflag);
+        if(oflag&O_CREAT){
+            dprintf(lfd,"[logger] open(\"%s\", %d, %d) = %d\n",path,oflag,mode,ret);
+        }else{
+            dprintf(lfd,"[logger] open(\"%s\", %d) = %d\n",path,oflag,ret);
+        }
+        return ret;
     }else{
-        dprintf(lfd,"[logger] open(\"%s\", %d) = %d\n",path,oflag,ret);
+        if(oflag&O_CREAT){
+            dprintf(lfd,"[logger] open(\"%s\", %d, %d) = %d\n",path,oflag,mode,-1);
+        }else{
+            dprintf(lfd,"[logger] open(\"%s\", %d) = %d\n",path,oflag,-1);
+        }
+        errno=EACCES;
+        return -1;
     }
-    return ret;
 }
 
 ssize_t read_api(int fildes,void*buf,size_t nbyte){
@@ -151,6 +166,8 @@ int __libc_start_main(main_t main_func,int argc,char**ubp_av,void(*init_func)(),
     hooks.emplace_back("system",(ull)&system_api);
 
     cout<<"config path: "<<getenv("SANDBOX_CONFIG")<<endl;
+    config.parse(getenv("SANDBOX_CONFIG"));
+    config.show();
     cout<<"Logger fd: "<<getenv("LOGGER_FD")<<endl;
     lfd=stoi(getenv("LOGGER_FD"));
 

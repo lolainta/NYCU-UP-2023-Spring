@@ -1,3 +1,5 @@
+#ifndef ELF_PARSER_H
+#define ELF_PARSER_H
 #include <stdio.h>
 #include <assert.h>
 #include <fcntl.h>
@@ -35,3 +37,4 @@ void print_symbols(int32_t fd, Elf32_Ehdr eh, Elf32_Shdr sh_table[]);
 void save_text_section(int32_t fd, Elf32_Ehdr eh, Elf32_Shdr sh_table[]);
 bool is64Bit(Elf32_Ehdr eh);
 
+#endif

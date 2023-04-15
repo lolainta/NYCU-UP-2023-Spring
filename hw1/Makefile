@@ -6,15 +6,13 @@ PROGS	= sandbox.so moon
 
 all: $(PROGS)
 
-self:
+self: $(PROGS)
 	./launcher ./sandbox.so configs/config.txt $(shell pwd)/moon
+
 moon: moon.cpp
 	$(CPP) -o $@ $^
 
-%o: %.cpp
-	$(CPP) -c -o $@ $^
-
-%.so: %.cpp elf-parser.c
+%.so: %.cpp elf-parser.c config.cpp
 	$(CPP) -o $@ $^ $(CFLAGS) --shared
 
 example1: launcher ./sandbox.so
@@ -52,5 +50,4 @@ clean:
 	rm -f index.html*
 	rm -f *.log
 	rm -f *.o
-	rm -f *.tmp
 

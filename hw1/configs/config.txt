@@ -1,6 +1,8 @@
 BEGIN open-blacklist
 /etc/passwd
 /etc/group
+open3.tmp
+/etc/../etc/passwd
 END open-blacklist
 
 BEGIN read-blacklist
