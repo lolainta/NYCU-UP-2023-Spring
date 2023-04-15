@@ -135,7 +135,6 @@ ssize_t read_api(int fildes,void*buf,size_t nbyte){
 }
 
 int close_api(int fildes){
-    cout<<dec<<fildes<<" closed"<<endl;
     return close(fildes);
 }
 
@@ -185,7 +184,7 @@ int __libc_start_main(main_t main_func,int argc,char**ubp_av,void(*init_func)(),
     cout<<"pid: "<<getpid()<<endl;
     str cmd=ubp_av[0];
     ull lb=mp_on(cmd);
-    cout<<"lb: "<<hex<<lb<<endl;
+//    cout<<"lb: "<<hex<<lb<<endl;
     cout<<"cmd: "<<cmd<<endl;
 
     vector<pair<string,ull>> hooks;
@@ -205,11 +204,10 @@ int __libc_start_main(main_t main_func,int argc,char**ubp_av,void(*init_func)(),
     for(auto hook:hooks){
         ull offset=get_offset(cmd,hook.first);
         if(offset==0xdeadbeaf){
-            cout<<"WARNING: off_set not found for "<<hook.first<<endl;
+//            cout<<"WARNING: off_set not found for "<<hook.first<<endl;
             continue;
-            exit(1);
         }
-        cout<<hook.first<<" offset="<<offset<<endl;
+//        cout<<hook.first<<" offset="<<offset<<endl;
         unsigned long*addr=(unsigned long*)(lb+offset);
         *addr=hook.second;
     }
