@@ -169,9 +169,8 @@ int getaddrinfo_api(const char*node,const char*service,const struct addrinfo*hin
         dprintf(lfd,"[logger] getaddrinfo(\"%s\", \"%s\", %p, %p) = %d\n",node,service,hints,res,ret);
         return ret;
     }else{
-        dprintf(lfd,"[logger] getaddrinfo(\"%s\", \"%s\", %p, %p) = -1\n",node,service,hints,res);
-        errno=EAI_NONAME;
-        return -1;
+        dprintf(lfd,"[logger] getaddrinfo(\"%s\", \"%s\", %p, %p) = %d\n",node,service,hints,res,EAI_NONAME);
+        return EAI_NONAME;
     }
 }
 
@@ -199,7 +198,7 @@ int __libc_start_main(main_t main_func,int argc,char**ubp_av,void(*init_func)(),
     hooks.emplace_back("close",(ull)&close_api);
 
     config.parse(getenv("SANDBOX_CONFIG"));
-    config.show();
+//    config.show();
     cout<<"Logger fd: "<<getenv("LOGGER_FD")<<endl;
     lfd=stoi(getenv("LOGGER_FD"));
 
