@@ -1,3 +1,4 @@
 sandbox.so
 *.tmp
+*.log
 moon
