@@ -20,4 +20,5 @@ int main(){
     memset(buf,0,128);
     read(fd,buf,6);
     cout<<buf<<endl;
+    close(fd);
 }

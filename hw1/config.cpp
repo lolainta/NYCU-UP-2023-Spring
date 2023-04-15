@@ -2,6 +2,8 @@
 #include <fstream>
 #include <cassert>
 #include <filesystem>
+#include <netdb.h>
+#include <arpa/inet.h>
 #include "config.h"
 
 namespace fs=filesystem;
@@ -32,7 +34,16 @@ void Config::parse(cstr&fname){
             }else if(section=="read"){
                 read.emplace_back(line);
             }else if(section=="connect"){
-                cout<<"connect not parse yet"<<endl;
+                size_t col=line.find(":");
+                assert(col!=str::npos);
+                str hostname=line.substr(0,col);
+                uint16_t port=stoi(line.substr(col+1));
+                struct hostent*host=gethostbyname(hostname.c_str());
+                in_addr**addr_list=(in_addr**)host->h_addr_list;
+                for(int i=0;addr_list[i];++i){
+                    str ip(inet_ntoa(*addr_list[i]));
+                    connect.emplace_back(ip,port);
+                }
             }else if(section=="getaddrinfo"){
                 getaddrinfo.emplace_back(line);
             }else{
@@ -43,6 +54,7 @@ void Config::parse(cstr&fname){
 }
 
 void Config::show(){
+    cout<<dec;
     cout<<"open blacklist:"<<endl;
     for(auto b:open){
         cout<<b<<endl;
@@ -52,8 +64,8 @@ void Config::show(){
         cout<<b<<endl;
     }
     cout<<"connect blacklist:"<<endl;
-    for(auto b:connect){
-        cout<<b<<endl;
+    for(auto [ip,port]:connect){
+        cout<<ip<<' '<<port<<endl;
     }
     cout<<"getaddrinfo blacklist:"<<endl;
     for(auto b:getaddrinfo){
@@ -68,6 +80,24 @@ bool Config::check_open(cstr&path){
                 return false;
         }catch(fs::filesystem_error e){
 //            cout<<e.what()<<endl;
+        }
+    }
+    return true;
+}
+
+bool Config::check_read(cstr&content){
+    for(auto p:read){
+        if(content.find(p)!=str::npos){
+            return false;
+        }
+    }
+    return true;
+}
+
+bool Config::check_connect(cstr&ip,uint16_t port){
+    for(auto[u,v]:connect){
+        if(u==ip && port==v){
+            return false;
         }
     }
     return true;

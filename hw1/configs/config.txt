@@ -7,6 +7,7 @@ END open-blacklist
 
 BEGIN read-blacklist
 -----BEGIN CERTIFICATE-----
+S3CR3T
 END read-blacklist
 
 BEGIN connect-blacklist

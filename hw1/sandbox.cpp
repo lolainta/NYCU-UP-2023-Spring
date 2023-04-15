@@ -7,6 +7,8 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <dlfcn.h>
 
@@ -107,9 +109,9 @@ int open_api(const char*path,int oflag,mode_t mode){
         return ret;
     }else{
         if(oflag&O_CREAT){
-            dprintf(lfd,"[logger] open(\"%s\", %d, %d) = %d\n",path,oflag,mode,-1);
+            dprintf(lfd,"[logger] open(\"%s\", %d, %d) = -1\n",path,oflag,mode);
         }else{
-            dprintf(lfd,"[logger] open(\"%s\", %d) = %d\n",path,oflag,-1);
+            dprintf(lfd,"[logger] open(\"%s\", %d) = -1\n",path,oflag);
         }
         errno=EACCES;
         return -1;
@@ -119,23 +121,46 @@ int open_api(const char*path,int oflag,mode_t mode){
 ssize_t read_api(int fildes,void*buf,size_t nbyte){
     str fname(to_string(getpid())+'-'+to_string(lfd)+"-read.log");
     auto ret=read(fildes,buf,nbyte);
-    FILE*log=fopen(fname.c_str(),"a");
-    fwrite(buf,sizeof(char),ret,log);
-    dprintf(lfd,"[logger] read(%d, %p, %ld) = %ld\n",fildes,buf,nbyte,ret);
-    fclose(log);
-    return ret;
+    if(config.check_read(str((char*)buf))){
+        FILE*log=fopen(fname.c_str(),"a");
+        fwrite(buf,sizeof(char),ret,log);
+        dprintf(lfd,"[logger] read(%d, %p, %ld) = %ld\n",fildes,buf,nbyte,ret);
+        fclose(log);
+        return ret;
+    }else{
+        dprintf(lfd,"[logger] read(%d, %p, %ld) = -1\n",fildes,buf,nbyte);
+        errno=EIO;
+        return -1;
+    }
+}
+
+int close_api(int fildes){
+    cout<<dec<<fildes<<" closed"<<endl;
+    return close(fildes);
 }
 
 int write_api(int fildes,void*buf,size_t nbyte){
+    str fname(to_string(getpid())+'-'+to_string(lfd)+"-write.log");
     auto ret=write(fildes,buf,nbyte);
+    FILE*log=fopen(fname.c_str(),"a");
+    fwrite(buf,sizeof(char),ret,log);
+    fclose(log);
     dprintf(lfd,"[logger] write(%d, %p, %ld) = %ld\n",fildes,buf,nbyte,ret);
     return ret;
 }
 
 int connect_api(int socket,const struct sockaddr*address,socklen_t address_len){
-    auto ret=connect(socket,address,address_len);
-    dprintf(lfd,"[logger] connect(%d, \"%s\", %d) = %d\n",socket,"IP",address_len,ret);
-    return ret;
+    uint16_t port=ntohs(((sockaddr_in*)address)->sin_port);
+    str ip(inet_ntoa(((sockaddr_in*)address)->sin_addr));
+    if(config.check_connect(ip,port)){
+        auto ret=connect(socket,address,address_len);
+        dprintf(lfd,"[logger] connect(%d, \"%s\", %d) = %d\n",socket,ip.c_str(),address_len,ret);
+        return ret;
+    }else{
+        dprintf(lfd,"[logger] connect(%d, \"%s\", %d) = -1\n",socket,ip.c_str(),address_len);
+        errno=ECONNREFUSED;
+        return -1;
+    }
 }
 
 int getaddrinfo_api(const char*node,const char*service,const struct addrinfo*hints,struct addrinfo**res){
@@ -165,8 +190,8 @@ int __libc_start_main(main_t main_func,int argc,char**ubp_av,void(*init_func)(),
     hooks.emplace_back("connect",(ull)&connect_api);
     hooks.emplace_back("getaddrinfo",(ull)&getaddrinfo_api);
     hooks.emplace_back("system",(ull)&system_api);
+    hooks.emplace_back("close",(ull)&close_api);
 
-    cout<<"config path: "<<getenv("SANDBOX_CONFIG")<<endl;
     config.parse(getenv("SANDBOX_CONFIG"));
     config.show();
     cout<<"Logger fd: "<<getenv("LOGGER_FD")<<endl;
