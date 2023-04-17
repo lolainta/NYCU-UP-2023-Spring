@@ -128,6 +128,7 @@ ssize_t read_api(int fildes,void*buf,size_t nbyte){
         fclose(log);
         return ret;
     }else{
+        memset(buf,0,nbyte);
         dprintf(lfd,"[logger] read(%d, %p, %ld) = -1\n",fildes,buf,nbyte);
         errno=EIO;
         return -1;
