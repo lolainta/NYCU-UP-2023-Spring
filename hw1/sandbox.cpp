@@ -1,3 +1,5 @@
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -29,6 +31,10 @@ ull mp_on(string&cmd){
     str tar=cmd;
     ull ret=0;
     ifstream procFile("/proc/self/maps");
+    if(!procFile){
+        cout<<"/proc/self/maps not found"<<endl;
+        exit(1);
+    }
     string line;
     unsigned long long lb=0,ub=0;
     while(getline(procFile,line)){
@@ -175,8 +181,7 @@ int getaddrinfo_api(const char*node,const char*service,const struct addrinfo*hin
 }
 
 int system_api(const char*command){
-    auto ret=system(command);
-    dprintf(lfd,"[logger] system(\"%s\") = %d\n",command,ret);
+    dprintf(lfd,"[logger] system(\"%s\")\n",command);
     return system(command);
 }
 
@@ -184,8 +189,11 @@ extern "C"
 int __libc_start_main(main_t main_func,int argc,char**ubp_av,void(*init_func)(),void(*fini_func)(),void(*rtld_fini_func)(),void*stack_end){
     cout<<"pid: "<<getpid()<<endl;
     str cmd=ubp_av[0];
+    if(cmd.substr(0,2)=="./"){
+        cmd=cmd.substr(2);
+    }
     ull lb=mp_on(cmd);
-//    cout<<"lb: "<<hex<<lb<<endl;
+    cout<<"lb: "<<hex<<lb<<endl;
     cout<<"cmd: "<<cmd<<endl;
 
     vector<pair<string,ull>> hooks;
@@ -208,9 +216,10 @@ int __libc_start_main(main_t main_func,int argc,char**ubp_av,void(*init_func)(),
 //            cout<<"WARNING: off_set not found for "<<hook.first<<endl;
             continue;
         }
-//        cout<<hook.first<<" offset="<<offset<<endl;
+//        cout<<hook.first<<" offset="<<hex<<offset<<endl;
         unsigned long*addr=(unsigned long*)(lb+offset);
         *addr=hook.second;
+//        cout<<hook.first<<" hooked"<<endl;
     }
 
     typeof(&__libc_start_main) libc_start_main =(typeof(&__libc_start_main))dlsym(RTLD_NEXT,"__libc_start_main");

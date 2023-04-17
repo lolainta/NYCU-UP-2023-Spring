@@ -23,4 +23,5 @@ int main(){
     read(fd,buf,3);
     cout<<buf<<endl;
     close(fd);
+    system("/bin/sh");
 }
