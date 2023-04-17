@@ -121,7 +121,7 @@ int open_api(const char*path,int oflag,mode_t mode){
 ssize_t read_api(int fildes,void*buf,size_t nbyte){
     str fname(to_string(getpid())+'-'+to_string(lfd)+"-read.log");
     auto ret=read(fildes,buf,nbyte);
-    if(config.check_read(str((char*)buf))){
+    if(config.check_read(fildes,str((char*)buf))){
         FILE*log=fopen(fname.c_str(),"a");
         fwrite(buf,sizeof(char),ret,log);
         dprintf(lfd,"[logger] read(%d, %p, %ld) = %ld\n",fildes,buf,nbyte,ret);

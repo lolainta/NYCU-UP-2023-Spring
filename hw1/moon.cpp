@@ -18,7 +18,9 @@ int main(){
     read(fd,buf,4);
     cout<<buf<<endl;
     memset(buf,0,128);
-    read(fd,buf,6);
+    read(fd,buf,3);
+    cout<<buf<<endl;
+    read(fd,buf,3);
     cout<<buf<<endl;
     close(fd);
 }

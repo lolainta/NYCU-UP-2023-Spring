@@ -84,10 +84,12 @@ bool Config::check_open(cstr&path){
     return true;
 }
 
-bool Config::check_read(cstr&content){
+bool Config::check_read(int fd,cstr&content){
+    str tar=status[fd]+content;
     for(auto p:read)
-        if(content.find(p)!=str::npos)
+        if(tar.find(p)!=str::npos)
             return false;
+    status[fd]=tar;
     return true;
 }
 
@@ -103,4 +105,8 @@ bool Config::check_getaddrinfo(cstr&node){
         if(p==node)
             return false;
     return true;
+}
+
+void Config::clear_status(int fd){
+    status.erase(fd);
 }
