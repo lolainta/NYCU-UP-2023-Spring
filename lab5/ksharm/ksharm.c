@@ -62,8 +62,8 @@ static const struct file_operations ksharm_dev_fops = {
 };
 
 static int ksharm_proc_read(struct seq_file *m, void *v) {
-	char buf[] = "`hello, world!` in /proc.\n";
-	seq_printf(m, buf);
+    for(int i=0;i<8;++i)
+        seq_printf(m,"%02d: %d\n",i,ksharm_data[i].size);
 	return 0;
 }
 
