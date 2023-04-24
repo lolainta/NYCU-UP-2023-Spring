@@ -19,7 +19,8 @@
 
 static dev_t devnum;
 static struct cdev c_dev;
-static struct class *clazz;
+static struct class*clazz;
+static int major;
 
 static int ksharm_dev_open(struct inode *i, struct file *f) {
 	printk(KERN_INFO "ksharm: device opened.\n");
@@ -81,19 +82,22 @@ static char *ksharm_devnode(const struct device *dev, umode_t *mode) {
 static int __init ksharm_init(void)
 {
 	// create char dev
-	if(alloc_chrdev_region(&devnum, 0, 1, "updev") < 0)
+	if(alloc_chrdev_region(&devnum,0,8,"updev")<0)
 		return -1;
-	if((clazz = class_create(THIS_MODULE, "upclass")) == NULL)
+	if((clazz=class_create(THIS_MODULE, "upclass")) == NULL)
 		goto release_region;
-	clazz->devnode = ksharm_devnode;
-	if(device_create(clazz, NULL, devnum, NULL, "ksharm") == NULL)
-		goto release_class;
-	cdev_init(&c_dev, &ksharm_dev_fops);
-	if(cdev_add(&c_dev, devnum, 1) == -1)
-		goto release_device;
+	clazz->devnode=ksharm_devnode;
+    major=MAJOR(devnum);
+    for(int i=0;i<8;++i){
+        if(device_create(clazz,NULL,MKDEV(major,i),NULL,"ksharm%d",i)==NULL)
+            goto release_class;
+    }
+    cdev_init(&c_dev,&ksharm_dev_fops);
+    if(cdev_add(&c_dev,devnum,1)==-1)
+        goto release_device;
 
 	// create proc
-	proc_create("ksharm", 0, NULL, &ksharm_proc_fops);
+//	proc_create("ksharm", 0, NULL, &ksharm_proc_fops);
 
 	printk(KERN_INFO "ksharm: initialized.\n");
 	return 0;    // Non-zero return means that the module couldn't be loaded.
