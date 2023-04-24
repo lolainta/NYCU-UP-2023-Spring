@@ -17,6 +17,11 @@
 #include <linux/device.h>
 #include <linux/cdev.h>
 
+static struct ksharm_ds{
+    char*data;
+    int size;
+} ksharm_data[8];
+
 static dev_t devnum;
 static struct cdev c_dev;
 static struct class*clazz;
@@ -91,13 +96,16 @@ static int __init ksharm_init(void)
     for(int i=0;i<8;++i){
         if(device_create(clazz,NULL,MKDEV(major,i),NULL,"ksharm%d",i)==NULL)
             goto release_class;
+        ksharm_data[i].size=4096;
+        ksharm_data[i].data=kzalloc(4096,GFP_KERNEL);
     }
     cdev_init(&c_dev,&ksharm_dev_fops);
-    if(cdev_add(&c_dev,devnum,1)==-1)
+    if(cdev_add(&c_dev,devnum,1)==-1){
         goto release_device;
+    }
 
 	// create proc
-//	proc_create("ksharm", 0, NULL, &ksharm_proc_fops);
+	proc_create("ksharm", 0, NULL, &ksharm_proc_fops);
 
 	printk(KERN_INFO "ksharm: initialized.\n");
 	return 0;    // Non-zero return means that the module couldn't be loaded.
@@ -115,6 +123,9 @@ static void __exit ksharm_cleanup(void)
 {
 	remove_proc_entry("ksharm", NULL);
 
+    for(int i=0;i<8;++i){
+        kfree(ksharm_data[i].data);
+    }
 	cdev_del(&c_dev);
 	device_destroy(clazz, devnum);
 	class_destroy(clazz);
