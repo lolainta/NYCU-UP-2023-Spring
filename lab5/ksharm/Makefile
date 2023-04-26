@@ -1,4 +1,4 @@
-obj-m += ksharm.o 
+obj-m += kshram.o 
 PWD := $(CURDIR) 
  
 all: 
@@ -9,5 +9,5 @@ clean:
 
 install: all
 	mkdir -p ../rootfs/modules
-	cp ksharm.ko ../rootfs/modules
+	cp kshram.ko ../rootfs/modules
 
