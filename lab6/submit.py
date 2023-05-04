@@ -38,16 +38,16 @@ def main():
     payload = None
     if len(sys.argv)>1 and sys.argv[1]!='-':
         with open(sys.argv[1],'rt') as f:
-            payload=asm(f.read())
+            payload=asm(f.read(),vma=0)
     else:
         payload=asm("""
         ret
         """)
+    print(f"!! payload: {len(payload)} bytes to send")
     r=remote('up23.zoolab.org',10950)
     if type(r)!=pwnlib.tubes.process.process:
         solve(r)
     r.sendlineafter(b'Enter to skip: ',b'' if teamtoken==None else teamtoken.encode())
-    print(f"!! payload: {len(payload)} bytes to send")
     r.sendlineafter(b'want to send? ',str(len(payload)).encode())
     if 'pause' in sys.argv[3:]:
         pause()
