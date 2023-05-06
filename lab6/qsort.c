@@ -1,8 +1,8 @@
-#define SWAP(a,b) do{ \
-    long temp=a; \
-    a=b; \
-    b=temp; \
-}while(0)
+inline void swap(long*a,long*b){
+    long tmp=*a;
+    *a=*b;
+    *b=tmp;
+}
 
 void qsort(long arr[],int n){
     int stack[64]={0,n-1};
@@ -12,23 +12,24 @@ void qsort(long arr[],int n){
         int l=stack[top--];
 
         long pivot=arr[h];
-        int i=(l-1);
-        for(int j=l;j<h;j++){
+        int i=l,j=h-1;
+        while(i<h && arr[i]<=pivot) ++i;
+        for(;j>i;--j){
             if(arr[j]<=pivot){
-                ++i;
-                SWAP(arr[i],arr[j]);
+                swap(&arr[i],&arr[j]);
+                do{
+                    ++i;
+                }while(i<h && arr[i]<=pivot);
             }
         }
-        SWAP(arr[i+1],arr[h]);
+        swap(&arr[i],&arr[h]);
 
-        int p=i+1;
-
-        if(p-1>l){
+        if(i-1>l){
             stack[++top]=l;
-            stack[++top]=p-1;
+            stack[++top]=i-1;
         }
-        if(h>p+1){
-            stack[++top]=p+1;
+        if(h>i+1){
+            stack[++top]=i+1;
             stack[++top]=h;
         }
     }
