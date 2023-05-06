@@ -39,8 +39,8 @@ qsort:
 	.p2align 3
 .L5:
 	mov	rdx, QWORD PTR [rax]
-	cmp	rdi, rdx
-	jl	.L4
+	cmp	rdx, rdi
+	jg	.L4
 	add	ecx, 1
 	movsx	rsi, ecx
 	lea	rsi, [r10+rsi*8]
@@ -93,47 +93,3 @@ qsort:
 	pop	r13
 	pop	r14
 	ret
-	.p2align 4
-partition:
-	movsx	rax, edx
-	mov	r9, rdi
-	lea	r11, [rdi+rax*8]
-	lea	edi, -1[rsi]
-	mov	r8, QWORD PTR [r11]
-	cmp	edx, esi
-	jle	.L22
-	movsx	rax, esi
-	sub	edx, esi
-	add	rdx, rax
-	lea	rcx, [r9+rax*8]
-	lea	rsi, [r9+rdx*8]
-	.p2align 4,,10
-	.p2align 3
-.L21:
-	mov	rax, QWORD PTR [rcx]
-	cmp	rax, r8
-	jg	.L20
-	add	edi, 1
-	movsx	rdx, edi
-	lea	rdx, [r9+rdx*8]
-	mov	r10, QWORD PTR [rdx]
-	mov	QWORD PTR [rdx], rax
-	mov	QWORD PTR [rcx], r10
-.L20:
-	add	rcx, 8
-	cmp	rsi, rcx
-	jne	.L21
-	mov	r8, QWORD PTR [r11]
-	lea	eax, 1[rdi]
-.L19:
-	movsx	rdi, edi
-	lea	rdx, 8[r9+rdi*8]
-	mov	rcx, QWORD PTR [rdx]
-	mov	QWORD PTR [rdx], r8
-	mov	QWORD PTR [r11], rcx
-	ret
-	.p2align 4,,10
-	.p2align 3
-.L22:
-	mov	eax, esi
-	jmp	.L19
