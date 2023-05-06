@@ -1,131 +1,126 @@
 	.p2align 4
 qsort:
 	push	r14
-	mov	r10, rdi
+	mov	r8, rdi
 	mov	ecx, 32
 	xor	eax, eax
 	push	r13
 	sub	esi, 1
 	push	r12
+	mov	r12d, 1
 	push	rbp
 	mov	ebp, 1
 	push	rbx
-	mov	ebx, 1
 	sub	rsp, 136
 	lea	rdi, -120[rsp]
 	rep stosq
 	mov	DWORD PTR -116[rsp], esi
 	.p2align 4,,10
 	.p2align 3
-.L26:
-	lea	r12d, -1[rbx]
-.L16:
-	movsx	rax, r12d
-	movsx	r8, DWORD PTR -120[rsp+rbp*4]
-	movsx	rax, DWORD PTR -120[rsp+rax*4]
-	lea	r13, [r10+r8*8]
-	mov	r9, r8
-	lea	r14d, -1[r8]
-	mov	r11, rax
-	lea	rsi, [r10+rax*8]
-	mov	rdi, QWORD PTR 0[r13]
-	mov	rcx, QWORD PTR [rsi]
-	mov	rax, rsi
-	mov	edx, r11d
-	cmp	r8d, r11d
-	jg	.L5
-	jmp	.L29
+.L20:
+	lea	r13d, -1[rbp]
+.L13:
+	movsx	rax, r13d
+	mov	ebx, DWORD PTR -120[rsp+r12*4]
+	mov	r11d, DWORD PTR -120[rsp+rax*4]
+	lea	edx, [rbx+r11]
+	mov	eax, edx
+	shr	eax, 31
+	add	eax, edx
+	sar	eax
+	cdqe
+	lea	rcx, [r8+rax*8]
+	movsx	rax, ebx
+	lea	r14, [r8+rax*8]
+	mov	rdx, QWORD PTR [rcx]
+	mov	rsi, QWORD PTR [r14]
+	cmp	rdx, rsi
+	jle	.L3
+	mov	QWORD PTR [rcx], rsi
+	mov	rsi, rdx
+	mov	QWORD PTR [r14], rdx
+	mov	rdx, QWORD PTR [rcx]
+.L3:
+	movsx	r9, r11d
+	lea	rax, [r8+r9*8]
+	mov	rdi, QWORD PTR [rax]
+	cmp	rdi, rdx
+	jle	.L4
+	mov	QWORD PTR [rax], rdx
+	mov	rdx, rdi
+	mov	QWORD PTR [rcx], rdi
+	mov	rsi, QWORD PTR [r14]
+.L4:
+	cmp	rdx, rsi
+	jge	.L5
+	mov	QWORD PTR [rcx], rsi
+	mov	rsi, rdx
+	mov	QWORD PTR [r14], rdx
+.L5:
+	cmp	ebx, r11d
+	jle	.L14
+	mov	edx, ebx
+	mov	ecx, r11d
+	sub	edx, r11d
+	add	rdx, r9
+	lea	r9, [r8+rdx*8]
 	.p2align 4,,10
 	.p2align 3
 .L8:
-	lea	rax, 8[rsi]
-	cmp	r9d, edx
-	je	.L30
-.L5:
-	mov	rcx, QWORD PTR [rax]
-	mov	rsi, rax
-	mov	eax, edx
-	lea	edx, 1[rdx]
-	cmp	rcx, rdi
-	jle	.L8
-.L4:
-	movsx	r8, r14d
-	cmp	r14d, eax
-	jg	.L11
-	jmp	.L7
+	mov	rdx, QWORD PTR [rax]
+	cmp	rdx, rsi
+	jg	.L7
+	movsx	rdi, ecx
+	add	ecx, 1
+	lea	rdi, [r8+rdi*8]
+	mov	r10, QWORD PTR [rdi]
+	mov	QWORD PTR [rdi], rdx
+	mov	QWORD PTR [rax], r10
+.L7:
+	add	rax, 8
+	cmp	rax, r9
+	jne	.L8
+	movsx	rax, ecx
+	mov	rsi, QWORD PTR [r14]
+	lea	rax, [r8+rax*8]
+.L6:
+	mov	rdx, QWORD PTR [rax]
+	mov	QWORD PTR [rax], rsi
+	lea	eax, -1[rcx]
+	mov	QWORD PTR [r14], rdx
+	cmp	eax, r11d
+	jg	.L9
+	add	ecx, 1
+	sub	ebp, 2
+	cmp	ecx, ebx
+	jl	.L10
+	test	ebp, ebp
+	js	.L18
+	movsx	r12, ebp
+	jmp	.L20
 	.p2align 4,,10
 	.p2align 3
 .L9:
-	sub	r8, 1
-	cmp	eax, r8d
-	jge	.L31
-.L11:
-	movsx	rdx, eax
-	mov	r14, QWORD PTR [r10+r8*8]
-	sal	rdx, 3
-	lea	rsi, [r10+rdx]
-	cmp	r14, rdi
-	jg	.L9
-	mov	QWORD PTR [rsi], r14
-	lea	rdx, 8[r10+rdx]
-	mov	QWORD PTR [r10+r8*8], rcx
-	jmp	.L10
-	.p2align 4,,10
-	.p2align 3
-.L32:
-	add	rdx, 8
-	cmp	rdi, rcx
-	jl	.L9
+	add	ecx, 1
+	mov	DWORD PTR -120[rsp+r12*4], eax
+	cmp	ebx, ecx
+	jle	.L13
 .L10:
-	add	eax, 1
-	mov	rcx, QWORD PTR [rdx]
-	mov	rsi, rdx
-	cmp	r9d, eax
-	jg	.L32
-	sub	r8, 1
-	cmp	eax, r8d
-	jl	.L11
+	lea	eax, 1[rbp]
+	add	ebp, 2
+	cdqe
+	movsx	r12, ebp
+	mov	DWORD PTR -120[rsp+rax*4], ecx
+	mov	DWORD PTR -120[rsp+r12*4], ebx
+	jmp	.L20
 	.p2align 4,,10
 	.p2align 3
-.L31:
-	mov	rdi, QWORD PTR 0[r13]
-.L7:
-	lea	edx, -1[rax]
-	mov	QWORD PTR [rsi], rdi
-	mov	QWORD PTR 0[r13], rcx
-	cmp	edx, r11d
-	jg	.L12
-	add	eax, 1
-	sub	ebx, 2
-	cmp	eax, r9d
-	jl	.L13
-	test	ebx, ebx
-	js	.L24
-	movsx	rbp, ebx
-	jmp	.L26
+.L14:
+	mov	ecx, r11d
+	jmp	.L6
 	.p2align 4,,10
 	.p2align 3
-.L12:
-	add	eax, 1
-	mov	DWORD PTR -120[rsp+rbp*4], edx
-	cmp	r9d, eax
-	jle	.L16
-.L13:
-	lea	edx, 1[rbx]
-	add	ebx, 2
-	movsx	rdx, edx
-	movsx	rbp, ebx
-	mov	DWORD PTR -120[rsp+rdx*4], eax
-	mov	DWORD PTR -120[rsp+rbp*4], r9d
-	jmp	.L26
-	.p2align 4,,10
-	.p2align 3
-.L30:
-	lea	rsi, [r10+r8*8]
-	mov	eax, r9d
-	mov	rcx, QWORD PTR [rsi]
-	jmp	.L4
-.L24:
+.L18:
 	add	rsp, 136
 	pop	rbx
 	pop	rbp
@@ -133,6 +128,3 @@ qsort:
 	pop	r13
 	pop	r14
 	ret
-.L29:
-	mov	eax, r11d
-	jmp	.L4
