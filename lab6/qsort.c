@@ -1,55 +1,46 @@
 void qsort(long arr[],int n){
     quickSort(arr,0,n-1);
 }
-// function to swap elements
-void swap(long *a, long *b) {
-  long t = *a;
-  *a = *b;
-  *b = t;
+/*
+void swap(long*a,long*b){
+  long t=*a;
+  *a=*b;
+  *b=t;
 }
+*/
 
-// function to find the partition position
-int partition(long array[], int low, int high) {
-  
-  // select the rightmost element as pivot
-  long pivot = array[high];
-  
-  // pointer for greater element
-  int i = (low - 1);
+#define SWAP(a,b) do{ \
+    long temp=a; \
+    a=b; \
+    b=temp; \
+}while(0)
 
-  // traverse each element of the array
-  // compare them with the pivot
-  for (int j = low; j < high; j++) {
-    if (array[j] <= pivot) {
-        
-      // if element smaller than pivot is found
-      // swap it with the greater element pointed by i
-      i++;
-      
-      // swap element at i with element at j
-      swap(&array[i], &array[j]);
+
+inline int partition(long array[],int low,int high){
+    long pivot=array[high];
+    int i=(low-1);
+    for(int j=low;j<high;j++){
+        if(array[j]<=pivot){
+            i++;
+            SWAP(array[i],array[j]);
+        }
     }
-  }
-
-  // swap the pivot element with the greater element at i
-  swap(&array[i + 1], &array[high]);
-  
-  // return the partition point
-  return (i + 1);
+    SWAP(array[i+1],array[high]);
+    return i+1;
 }
 
-void quickSort(long array[], int low, int high) {
-  if (low < high) {
-    
-    // find the pivot element such that
-    // elements smaller than pivot are on left of pivot
-    // elements greater than pivot are on right of pivot
-    int pi = partition(array, low, high);
-    
-    // recursive call on the left of pivot
-    quickSort(array, low, pi - 1);
-    
-    // recursive call on the right of pivot
-    quickSort(array, pi + 1, high);
-  }
+void quickSort(long array[],int low,int high){ 
+    if(high-low<=8){
+        for(int i=low;i<high;++i){
+            for(int j=i+1;j<high;++j){
+                if(array[i]>array[j])
+                    SWAP(array[i],array[j]);
+            }
+        }
+    }
+    if(low<high){
+        int pi=partition(array,low,high);
+        quickSort(array,low,pi-1);
+        quickSort(array,pi+1,high);
+    }
 }
