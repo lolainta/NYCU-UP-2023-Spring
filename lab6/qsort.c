@@ -11,6 +11,7 @@ void qsort(long arr[],int n){
         int h=stack[top--];
         int l=stack[top--];
         int mid=(l+h)/2;
+/*
 #define p1 arr[l]
 #define p2 arr[mid]
 #define p3 arr[h]
@@ -23,6 +24,7 @@ void qsort(long arr[],int n){
 #undef p1
 #undef p2
 #undef p3
+*/
         long pivot=arr[h];
         int i=l;
         for(int j=l;j<h;++j){
@@ -32,7 +34,6 @@ void qsort(long arr[],int n){
             }
         }
         SWAP(arr[i],arr[h]);
-
         if(i-1>l){
             stack[++top]=l;
             stack[++top]=i-1;

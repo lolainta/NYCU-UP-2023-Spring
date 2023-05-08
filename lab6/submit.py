@@ -52,7 +52,9 @@ def main():
     if 'pause' in sys.argv[3:]:
         pause()
     r.sendafter(b'your code: ',payload);
-    r.interactive()
+#    r.interactive();
+    out=r.recvuntil(b'OK').decode();
+    print(out)
 
 if __name__=='__main__':
     main()
