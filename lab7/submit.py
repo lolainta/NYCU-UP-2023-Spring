@@ -1,7 +1,8 @@
 import base64
 import hashlib
+import os
 
-from pwn import *
+from pwn import shellcraft, remote, asm, p64, context
 
 
 def solve(r):
@@ -11,7 +12,6 @@ def solve(r):
         if h[:6] == "000000":
             ans = str(i).encode()
             break
-    print(time.time())
     r.sendlineafter(b"string S: ", base64.b64encode(ans))
 
 
