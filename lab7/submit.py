@@ -88,10 +88,6 @@ shm_sc = """
     mov rdi,1
     mov rdx,0x80
     syscall
-
-    mov rdi,37
-    mov rax,60
-    syscall
     """
 
 run(shm_sc)
