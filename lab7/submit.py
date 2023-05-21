@@ -94,7 +94,7 @@ run(shm_sc)
 
 run(
     shellcraft.amd64.linux.connect("localhost", 0x1337)
-    + shellcraft.amd64.linux.read(3, "rsp", 0x100)
+    + shellcraft.amd64.linux.read("rbp", "rsp", 0x100)
     + shellcraft.amd64.linux.write(1, "rsp", 0x100)
 )
 
