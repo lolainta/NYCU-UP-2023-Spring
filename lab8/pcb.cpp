@@ -9,7 +9,6 @@ PCB::PCB(int pid):pid(pid){
     ifstream is(mfile);
     string line;
     while(getline(is,line)){
-        cout<<line<<endl;
         auto dashidx=line.find('-');
         auto spaceidx=line.find(' ');
         string lb=line.substr(0,dashidx);

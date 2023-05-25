@@ -11,11 +11,11 @@ class PCB{
 private:
     int pid;
     user_regs_struct regs;
-    vector<pull> mems;
     void store(ull,ull);
     map<ull,ull> data;
 public:
     PCB(int);
+    vector<pull> mems;
     void snap();
     void restore();
 };

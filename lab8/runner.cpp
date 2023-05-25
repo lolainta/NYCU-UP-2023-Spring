@@ -116,16 +116,17 @@ int main(int argc,char**argv){
         waitpid(child,&status,0);
         ptrace(PTRACE_CONT,child,0,0);
         waitpid(child,&status,0);  
+        unsigned long long maddr=get_regs().rax;
         ptrace(PTRACE_CONT,child,0,0);
         waitpid(child,&status,0);
-        ptrace(PTRACE_CONT,child,0,0);
-        waitpid(child,&status,0);  
         PCB snapshot(child);
         snapshot.snap();
+        snapshot.mems.clear();
+        snapshot.mems.emplace_back(maddr,maddr+16);
         for(int i=0;i<(1<<9);++i){
             snapshot.restore();
-            unsigned long long rip=get_regs().rip;
-            unsigned long long maddr=rip+0xcf7f0;
+            ptrace(PTRACE_CONT,child,0,0);
+            waitpid(child,&status,0);  
             unsigned long long magic=0;
             for(int j=0;j<8;++j){
                 if(i&(1<<j))
@@ -133,14 +134,12 @@ int main(int argc,char**argv){
                 else
                     magic|=0x30ull<<j*8;
             }
-            unsigned long long tmp;
             ptrace(PTRACE_POKETEXT,child,maddr,magic);
             ptrace(PTRACE_POKETEXT,child,maddr+1,( (magic>>8) | ( (i&(1<<8)?0x31ull:0x30ull) << 56) ));
-            tmp=ptrace(PTRACE_PEEKTEXT,child,maddr,0);
             ptrace(PTRACE_CONT,child,0,0);
-            waitpid(child,&status,0);  
-            ptrace(PTRACE_CONT,child,0,0);
-            waitpid(child,&status,0);  
+            waitpid(child,&status,0);
+            if(get_regs().rax==0)
+                break;
         }
     }
 

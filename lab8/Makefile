@@ -5,7 +5,7 @@ CXX := g++
 all:
 	make $(TARGET)
 
-pcb.o: pcb.cpp
+%.o: %.cpp
 	$(CXX) -c $^
 
 runner: runner.cpp pcb.o
@@ -16,3 +16,4 @@ run: runner sample1
 
 clean:
 	rm $(TARGET)
+	rm pcb.o
