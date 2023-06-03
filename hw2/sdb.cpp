@@ -60,7 +60,7 @@ void SDB::disas(){
             stringstream ss;
             for(int j=0;j<insn[i].size;++j)
                 ss<<hex<<setfill('0')<<setw(2)<<(int)insn[i].bytes[j]<<' ';
-            cout<<setw(20)<<left<<ss.str();
+            cout<<setw(24)<<left<<ss.str();
             cout<<setw(10)<<insn[i].mnemonic<<' ';
             cout<<insn[i].op_str<<right<<endl;
             if(string(insn[i].mnemonic)=="ret")
