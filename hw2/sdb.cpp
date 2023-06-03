@@ -50,9 +50,8 @@ void SDB::disas(){
     }
 	int count=cs_disasm(handle,code,sizeof(code)-1,rip,0,&insn);
 	if(count>0){
-        bool flag=false;
 	    for(int i=0;i<5;i++){
-            if(flag){
+            if(insn[i].size==2 && insn[i].bytes[0]==0 && insn[i].bytes[1]==0){
                 log("the address is out of the range of the text segment.");
                 break;
             }
@@ -63,8 +62,6 @@ void SDB::disas(){
             cout<<setw(24)<<left<<ss.str();
             cout<<setw(10)<<insn[i].mnemonic<<' ';
             cout<<insn[i].op_str<<right<<endl;
-            if(string(insn[i].mnemonic)=="ret")
-                flag=true;
 		}
 		cs_free(insn,count);
 	}else
@@ -159,9 +156,8 @@ void SDB::timetravel(){
     ptrace(PTRACE_SETREGS,child,0,&snapshot.regs);
     for(auto[u,v]:snapshot.data)
         ptrace(PTRACE_POKETEXT,child,u,v);
-    for(auto[u,v]:bps){
-        assert(v==poke(u,0xcc));
-    }
+    for(auto[u,v]:bps)
+        poke(u,0xcc);
     log("go back to the anchor point");
     disas();
 }
