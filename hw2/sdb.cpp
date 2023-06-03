@@ -132,11 +132,38 @@ void SDB::brk(uint64_t addr){
 }
 
 void SDB::anchor(){
-    
+    string mfile="/proc/"+to_string(child)+"/maps";
+    ifstream is(mfile);
+    string line;
+    vector<pair<uint64_t,uint64_t>> mems;
+    while(getline(is,line)){
+        auto dashidx=line.find('-');
+        auto spaceidx=line.find(' ');
+        string lb=line.substr(0,dashidx);
+        string ub=line.substr(dashidx+1,spaceidx-dashidx);
+        mems.emplace_back(stoull(lb,nullptr,16),stoull(ub,nullptr,16));
+    }
+    if(ptrace(PTRACE_GETREGS,child,0,&snapshot.regs)!=0){
+        perror("PTRACE_GETREGS");
+        exit(1);
+    }
+    for(auto[u,v]:mems)
+        for(uint64_t i=u;i<v;i+=8){
+            auto ret=ptrace(PTRACE_PEEKTEXT,child,i,0);
+            snapshot.data.emplace_back(i,ret);
+        }
+    log("dropped an anchor");
 }
 
 void SDB::timetravel(){
-
+    ptrace(PTRACE_SETREGS,child,0,&snapshot.regs);
+    for(auto[u,v]:snapshot.data)
+        ptrace(PTRACE_POKETEXT,child,u,v);
+    for(auto[u,v]:bps){
+        assert(v==poke(u,0xcc));
+    }
+    log("go back to the anchor point");
+    disas();
 }
 
 void SDB::run(){
@@ -159,7 +186,7 @@ void SDB::run(){
         assert(WIFSTOPPED(status));
         ptrace(PTRACE_SETOPTIONS,child,0,PTRACE_O_EXITKILL);
     }
-    log("program '%s' loaded. entry point %p\n",program[0],sync_regs().rip);
+    log("program '%s' loaded. entry point %p",program[0],sync_regs().rip);
     disas();
     this->shell();
 }

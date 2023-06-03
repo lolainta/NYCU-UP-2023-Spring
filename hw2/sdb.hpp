@@ -1,4 +1,5 @@
 #include<iostream>
+#include<fstream>
 #include<iomanip>
 #include<vector>
 #include<cassert>
@@ -18,6 +19,11 @@ struct BreakPoint{
     BreakPoint(uint64_t addr,uint8_t org):addr(addr),org(org){}
 };
 
+struct Anchor{
+    user_regs_struct regs;
+    vector<pair<uint64_t,uint64_t>> data;
+};
+
 class SDB{
 private:
     int child;
@@ -28,6 +34,7 @@ private:
     uint8_t poke(uint64_t,uint8_t);
     BreakPoint findbp(uint64_t);
     vector<BreakPoint> bps;
+    Anchor snapshot;
     void shell();
 
     void disas();
