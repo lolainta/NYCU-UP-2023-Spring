@@ -1,9 +1,7 @@
 #include "sdb.hpp"
 #include "utils.hpp"
 
-SDB::SDB(char**program):program(program){
-
-}
+SDB::SDB(char**program):program(program){}
 
 user_regs_struct SDB::sync_regs(){
     if(ptrace(PTRACE_GETREGS,child,0,&regs)!=0){
@@ -13,16 +11,37 @@ user_regs_struct SDB::sync_regs(){
     return regs;
 }
 
+uint8_t SDB::poke(uint64_t addr,uint8_t data){
+    uint64_t org=ptrace(PTRACE_PEEKTEXT,child,addr,0);
+    ptrace(PTRACE_POKETEXT,child,addr,org&~0xff|data);
+    return org&0xff;
+}
+
+BreakPoint SDB::findbp(uint64_t addr){
+    for(auto bp:bps)
+        if(bp.addr==addr)
+            return bp;
+    return BreakPoint(0,0);
+}
+
 void SDB::disas(){
-    unsigned char code[64];
-    unsigned long long rip=sync_regs().rip;
+    uint8_t code[64];
+    uint64_t rip=sync_regs().rip;
     long ret;
     unsigned char*ptr=(unsigned char*)&ret;
+
     for(int i=0;i<8;++i){
         ret=ptrace(PTRACE_PEEKTEXT,child,rip+8*i,0);
         for(int j=0;j<8;++j)
             code[i*8+j]=ptr[j];
     }
+
+    for(auto[addr,org]:bps){
+        if(rip<=addr && addr<rip+64){
+            code[addr-rip]=org;
+        }       
+    }
+
     csh handle;
     cs_insn*insn;
     if(cs_open(CS_ARCH_X86,CS_MODE_64,&handle)!=CS_ERR_OK){
@@ -54,17 +73,62 @@ void SDB::disas(){
 }
 
 void SDB::si(){
-    ptrace(PTRACE_SINGLESTEP,child,0,0);
-    waitpid(child,&status,0);
+    if(!WIFSTOPPED(status)){
+        log("program not running.");
+        exit(1);
+    }
+    uint64_t rip=sync_regs().rip;
+    BreakPoint bp=findbp(rip);
+    if(bp.addr==0){
+        ptrace(PTRACE_SINGLESTEP,child,0,0);
+        waitpid(child,&status,0);
+    }else{
+        poke(bp.addr,bp.org);
+        ptrace(PTRACE_SINGLESTEP,child,0,0);
+        waitpid(child,&status,0);
+        poke(bp.addr,0xcc);
+    }
+    if(WIFSTOPPED(status))
+        disas();
+    else
+        log("the target program terminated.");
 }
 
 void SDB::cont(){
-    ptrace(PTRACE_CONT,child,0,0);
-    waitpid(child,&status,0);
+    if(!WIFSTOPPED(status)){
+        log("program not running.");
+        exit(1);
+    }
+    uint64_t rip=sync_regs().rip;
+    BreakPoint bp=findbp(rip);
+    if(bp.addr==0){
+        ptrace(PTRACE_CONT,child,0,0);
+        waitpid(child,&status,0);
+    }else{
+        poke(bp.addr,bp.org);
+        ptrace(PTRACE_CONT,child,0,0);
+        waitpid(child,&status,0);
+        poke(bp.addr,0xcc);
+    }
+    if(WIFSTOPPED(status)){
+        rip=sync_regs().rip;
+        bp=findbp(rip-1);
+        log("hit a breakpoint at %p,",rip-1);
+        assert(bp.addr!=0);
+
+        poke(bp.addr,bp.org);
+        regs.rip-=1;
+        ptrace(PTRACE_SETREGS,child,0,&regs);
+        disas();
+
+        poke(bp.addr,0xcc);
+    }else
+        log("the target program terminated.");
 }
 
 void SDB::brk(uint64_t addr){
-
+    log("set break point at %p",addr);
+    bps.emplace_back(addr,poke(addr,0xcc));
 }
 
 void SDB::anchor(){
@@ -110,22 +174,17 @@ void SDB::shell(){
             continue;
         if(cmd.front()=="disas")
             disas();
-        else if(cmd.front()=="si"){
+        else if(cmd.front()=="si")
             si();
-            if(WIFSTOPPED(status))
-                disas();
-            else
-                log("the target program terminated.");
-        }
-        else if(cmd.front()=="cont"){
+        else if(cmd.front()=="cont")
             cont();
-            if(WIFSTOPPED(status))
-                disas();
-            else
-                log("the tartget program terminated.");
-        }else if(cmd.front()=="brk")
-            brk(stoull(cmd[1]));
-        else if(cmd.front()=="anchor")
+        else if(cmd.front()=="break"){
+            if(cmd.size()==1){
+                log("please enter an address.");
+                continue;
+            }
+            brk(stoull(cmd[1],nullptr,16));
+        }else if(cmd.front()=="anchor")
             anchor();
         else if(cmd.front()=="timetravel")
             timetravel();
