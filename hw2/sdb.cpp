@@ -34,7 +34,7 @@ void SDB::disas(){
         bool flag=false;
 	    for(int i=0;i<5;i++){
             if(flag){
-                cout<<"** the address is out of the range of the text segment."<<endl;
+                log("the address is out of the range of the text segment.");
                 break;
             }
             cout<<hex<<setfill(' ')<<setw(12)<<insn[i].address<<": ";
@@ -59,7 +59,8 @@ void SDB::si(){
 }
 
 void SDB::cont(){
-
+    ptrace(PTRACE_CONT,child,0,0);
+    waitpid(child,&status,0);
 }
 
 void SDB::brk(uint64_t addr){
@@ -94,14 +95,14 @@ void SDB::run(){
         assert(WIFSTOPPED(status));
         ptrace(PTRACE_SETOPTIONS,child,0,PTRACE_O_EXITKILL);
     }
-    printf("** program '%s' loaded. entry point %p\n",program[0],sync_regs().rip);
+    log("program '%s' loaded. entry point %p\n",program[0],sync_regs().rip);
     disas();
     this->shell();
 }
 
 void SDB::shell(){
     while(true){
-        cout<<"(sdb) ";
+        printf("(sdb) ");
         string input;
         getline(cin,input);
         auto cmd=split(input);
@@ -113,19 +114,36 @@ void SDB::shell(){
             si();
             if(WIFSTOPPED(status))
                 disas();
+            else
+                log("the target program terminated.");
         }
-        else if(cmd.front()=="cont")
+        else if(cmd.front()=="cont"){
             cont();
-        else if(cmd.front()=="brk")
+            if(WIFSTOPPED(status))
+                disas();
+            else
+                log("the tartget program terminated.");
+        }else if(cmd.front()=="brk")
             brk(stoull(cmd[1]));
         else if(cmd.front()=="anchor")
             anchor();
         else if(cmd.front()=="timetravel")
             timetravel();
         else{
+            log("Unknown command");
             for(auto x:cmd)
                 cout<<x<<' ';
             cout<<endl;
         }
     }
+}
+
+void SDB::log(string fmt,...){
+    printf("** ");
+    va_list args;
+    va_start(args,fmt.c_str());
+    vprintf(fmt.c_str(),args);
+    va_end(args);
+    printf("\n");
+
 }

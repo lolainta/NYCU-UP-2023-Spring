@@ -19,12 +19,15 @@ private:
     user_regs_struct regs;
     user_regs_struct sync_regs();
     void shell();
+
     void disas();
     void si();
     void cont();
     void brk(uint64_t);
     void anchor();
     void timetravel();
+
+    void log(string,...);
 public:
     SDB(char**);
     void run();
