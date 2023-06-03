@@ -93,7 +93,6 @@ void SDB::run(){
         }
         assert(WIFSTOPPED(status));
         ptrace(PTRACE_SETOPTIONS,child,0,PTRACE_O_EXITKILL);
-        perror("SDB::run PTRACE_SETOPTIONS");
     }
     printf("** program '%s' loaded. entry point %p\n",program[0],sync_regs().rip);
     disas();
@@ -105,7 +104,7 @@ void SDB::shell(){
         cout<<"(sdb) ";
         string input;
         getline(cin,input);
-        auto cmd=Utils::split(input);
+        auto cmd=split(input);
         if(cmd.empty())
             continue;
         if(cmd.front()=="disas")
