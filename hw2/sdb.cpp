@@ -1,30 +1,21 @@
-#include<iostream>
-#include<sstream>
-#include<iomanip>
-#include<cassert>
-#include<unistd.h>
-#include<capstone/capstone.h>
-#include<sys/ptrace.h>
-#include<sys/wait.h>
-#include<sys/user.h>
+#include "sdb.hpp"
+#include "utils.hpp"
 
-using namespace std;
+SDB::SDB(char**program):program(program){
 
-int child=-1;
+}
 
-user_regs_struct get_regs(){
-    user_regs_struct regs;
-    unsigned long long rip;
+user_regs_struct SDB::sync_regs(){
     if(ptrace(PTRACE_GETREGS,child,0,&regs)!=0){
-        perror("PTRACE_GETREGS");
+        perror("SDB::sync_regs");
         exit(1);
     }
     return regs;
 }
 
-void get_imem(){
+void SDB::disas(){
     unsigned char code[64];
-    unsigned long long rip=get_regs().rip;
+    unsigned long long rip=sync_regs().rip;
     long ret;
     unsigned char*ptr=(unsigned char*)&ret;
     for(int i=0;i<8;++i){
@@ -35,7 +26,7 @@ void get_imem(){
     csh handle;
     cs_insn*insn;
     if(cs_open(CS_ARCH_X86,CS_MODE_64,&handle)!=CS_ERR_OK){
-        perror("cs_open");
+        perror("SDB::disas cs_open");
         exit(1);
     }
 	int count=cs_disasm(handle,code,sizeof(code)-1,rip,0,&insn);
@@ -62,61 +53,80 @@ void get_imem(){
 	cs_close(&handle);
 }
 
-int handle_cmd(){
-    int status;
-cmd:
-    cout<<"(sdb) ";
-    string cmd;
-    getline(cin,cmd);
-    if(cmd=="cont"){
-        ptrace(PTRACE_CONT,child,0,0);
-        waitpid(child,&status,0);
-        return status;
-    }else if(cmd=="si"){
-        ptrace(PTRACE_SINGLESTEP,child,0,0);
-        waitpid(child,&status,0);
-        if(WIFSTOPPED(status))
-            get_imem();
-        return status;
-    }else if(cmd=="ls"){
-        get_imem();
-        goto cmd;
-    }else{
-        goto cmd;
-    }
+void SDB::si(){
+    ptrace(PTRACE_SINGLESTEP,child,0,0);
+    waitpid(child,&status,0);
 }
 
-int main(int argc,char**argv){
-    if(argc<2){
-        cerr<<"Usage: "<<argv[0]<<" <program>"<<endl;
-        exit(1);
-    }
-    child=fork();
+void SDB::cont(){
+
+}
+
+void SDB::brk(uint64_t addr){
+
+}
+
+void SDB::anchor(){
+    
+}
+
+void SDB::timetravel(){
+
+}
+
+void SDB::run(){
+    this->child=fork();
     if(child<0){
-        perror("fork");
+        perror("SDB::run fork");
         exit(1);
     }else if(child==0){
         if(ptrace(PTRACE_TRACEME,0,0,0)<0){
-            perror("PTRACE_TRACEME");
+            perror("SDB::run PTRACE_TRACEME");
             exit(1);
         }
-        execvp(argv[1],argv+1);
-        perror("execvp");
+        execvp(program[0],program+1);
+        perror("SDB::run execvp");
     }else{
-        int status;
         if(waitpid(child,&status,0)<0){
-            perror("waitpid");
+            perror("SDB::run waitpid");
             exit(1);
         }
         assert(WIFSTOPPED(status));
         ptrace(PTRACE_SETOPTIONS,child,0,PTRACE_O_EXITKILL);
-        cout<<"** program '"<<argv[1]<<"' loaded. entry point 0x"<<hex<<get_regs().rip<<endl;
-        get_imem();
-        while(WIFSTOPPED(status)){
-            status=handle_cmd();
-        }
-        perror("done");
+        perror("SDB::run PTRACE_SETOPTIONS");
     }
+    printf("** program '%s' loaded. entry point %p\n",program[0],sync_regs().rip);
+    disas();
+    this->shell();
+}
 
-    return 0;
+void SDB::shell(){
+    while(true){
+        cout<<"(sdb) ";
+        string input;
+        getline(cin,input);
+        auto cmd=Utils::split(input);
+        if(cmd.empty())
+            continue;
+        if(cmd.front()=="disas")
+            disas();
+        else if(cmd.front()=="si"){
+            si();
+            if(WIFSTOPPED(status))
+                disas();
+        }
+        else if(cmd.front()=="cont")
+            cont();
+        else if(cmd.front()=="brk")
+            brk(stoull(cmd[1]));
+        else if(cmd.front()=="anchor")
+            anchor();
+        else if(cmd.front()=="timetravel")
+            timetravel();
+        else{
+            for(auto x:cmd)
+                cout<<x<<' ';
+            cout<<endl;
+        }
+    }
 }

@@ -1,15 +1,21 @@
 TARGET := sdb
 LIBNAME := capstone
 CXX := g++
+CXXFLAG := -std=c++17
+SRC := $(wildcard *.cpp)
+OBJ := $(patsubst %.cpp,%.o,$(SRC))
 
 all:
 	make sdb
 
-sdb: sdb.cpp
-	$(CXX) -o $@ $^ -std=c++20 -l$(LIBNAME)
+%.o: %.cpp
+	$(CXX) -c $^
 
-run: sdb hello64
-	./sdb ./hello64
+sdb: $(OBJ)
+	$(CXX) -o $@ $^ $(CXXFLAG) -l$(LIBNAME)
 
+test: sdb
+	./sdb examples/hello64
 clean:
-	rm $(TARGET)
+	rm -f $(TARGET)
+	rm -f $(OBJ)
