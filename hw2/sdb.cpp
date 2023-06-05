@@ -103,9 +103,11 @@ void SDB::cont(){
         waitpid(child,&status,0);
     }else{
         poke(bp.addr,bp.org);
-        ptrace(PTRACE_CONT,child,0,0);
+        ptrace(PTRACE_SINGLESTEP,child,0,0);
         waitpid(child,&status,0);
         poke(bp.addr,0xcc);
+        ptrace(PTRACE_CONT,child,0,0);
+        waitpid(child,&status,0);
     }
     if(WIFSTOPPED(status)){
         rip=sync_regs().rip;
