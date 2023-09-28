@@ -2,7 +2,6 @@ UP23 Lab06
 ==========
 Date: 2023-05-01
 
-[TOC]
 
 # Assembly Sort Challenge
 
@@ -76,6 +75,4 @@ Before we illustrate how to grade your implementation, we define the *correctnes
 
 - [15 pts] You can get additional points based on your rank on the live scoreboard. We plan to classify all the unique identities on the leaderboard into three classes. The top class gets all 15pts, the second class gets 10 pts, and the last class gets 5 pts.
 
-:::danger
 We have an execution time limit for your challenge. You have to solve the challenge within 120s.
-:::
