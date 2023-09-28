@@ -3,8 +3,7 @@
 - [Course Syllubus](https://timetable.nycu.edu.tw/?r=main/crsoutline&Acy=111&Sem=2&CrsNo=535512)
 - [Course Page](https://people.cs.nctu.edu.tw/~chuang/courses/unixprog/)
 
-- [Labs](https://md.zoolab.org/s/LY8_IrBSw)
-    Only 140.113.0.0/16 are allowed to visit
+- [Labs](https://md.zoolab.org/s/LY8_IrBSw) Only 140.113.0.0/16 are allowed to visit
 
 
 ## Labs
