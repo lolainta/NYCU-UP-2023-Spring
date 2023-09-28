@@ -1,7 +1,5 @@
 # UP23 HW1
-<i style="color:red">Due Date: 2023-04-17</i>
-
-[TOC]
+<i>Due Date: 2023-04-17</i>
 
 ## Secured API Call
 
@@ -11,10 +9,8 @@ The homework aims to practice library injection, API hijacking, and GOT rewritin
 
 ### Program Launcher
 
-:::success
 You don't have to implement the launcher. Please use our launcher to invoke commands and load the required shared object.
 You can download our launcher from [here](https://up23.zoolab.org/up23/hw1/launcher).
-:::
 
 We use a `launcher` program to execute a command and load your `sandbox.so` using `LD_PRELOAD`. The launcher executes the command and passes the required environment variables to an invoked process. The environment variables include:
 
@@ -304,6 +300,81 @@ Please pack your files into a single `tar.gz` archive and submit your homework v
 ## Demo Steps
 * https://md.zoolab.org/s/gLXd81Myi
 
-## Hints
+### Setup
+
+1. Download testcase file from the [LINK](https://up23.zoolab.org/up23/hw1/hw1testcase.zip).
+2. `unzip hw1testcase.zip`
+3. run `setup.sh` in `testcase` folder.
+4. compile your program and move it into the `testcase` folder.
+
+### Example Case
+
+```
+BEGIN open-blacklist
+/etc/passwd
+/etc/shadow
+END open-blacklist
+
+BEGIN read-blacklist
+-----BEGIN CERTIFICATE-----
+END read-blacklist
+
+BEGIN connect-blacklist
+www.nycu.edu.tw:443
+google.com:80
+END connect-blacklist
+
+BEGIN getaddrinfo-blacklist
+www.ym.edu.tw
+www.nctu.edu.tw
+END getaddrinfo-blacklist
+```
+
+#### Example1
+* command: `./launcher ./sandbox.so config-example.txt cat /etc/passwd`
+#### Example2
+* command: `./launcher ./sandbox.so config-example.txt cat /etc/hosts`
+#### Example3
+* command: `./launcher ./sandbox.so config-example.txt cat /etc/ssl/certs/Amazon_Root_CA_1.pem`
+#### Example5
+* command: `./launcher ./sandbox.so config-example.txt wget http://google.com -t 1`
+#### Example6
+* command: `./launcher ./sandbox.so config-example.txt wget https://www.nycu.edu.tw -t 1`
+#### Example7
+* command: `./launcher ./sandbox.so config-example.txt wget http://www.google.com -q -t 1`
+#### Example8
+* command: `./launcher ./sandbox.so config-example.txt python3 -c 'import os;os.system("wget http://www.google.com -q -t 1")'`
+### Hidden Case
+
+```
+
+BEGIN open-blacklist
+/etc/passwd
+/test/notfound
+END open-blacklist
+
+BEGIN read-blacklist
+HTTP/1.1 301
+END read-blacklist
+
+BEGIN connect-blacklist
+freebsd.cs.nctu.edu.tw:443
+END connect-blacklist
+
+BEGIN getaddrinfo-blacklist
+www.ym.edu.tw
+www.nctu.edu.tw
+END getaddrinfo-blacklist
+
+```
+
+#### Case1
+* command: `./launcher ./sandbox.so config.txt cat /tmp/testfile ; ./launcher ./sandbox.so config.txt cat /etc/passwd ; ./launcher ./sandbox.so config.txt cat /etc/hosts`
+#### Case2
+* command: `./launcher ./sandbox.so config.txt wget http://google.com/ -t 1 -o /dev/null ; ./launcher ./sandbox.so config.txt wget http://linux.cs.nctu.edu.tw ; ./launcher ./sandbox.so config.txt wget https://freebsd.cs.nctu.edu.tw`
+#### Case3
+* command: `./launcher ./sandbox.so config.txt ./case3`
+
+### Hints
 * You don't need to consider the non-PIE binary. We will use PIE binary to test your program only.
 * You can use `readelf -r` to find the GOT offset of the binary.
