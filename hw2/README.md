@@ -1,7 +1,5 @@
 # UP23 HW2
-<i style="color:red">Due Date: 2023-06-05</i>
-
-[TOC]
+<i>Due Date: 2023-06-05</i>
 
 ## Simple Instruction Level Debugger
 
@@ -42,14 +40,10 @@ When returning from execution, the debugger should disassemble 5 instruction sta
 
 And make sure the output is aligned with the columns.
 
-:::info
 Hint: You can link against the capstone library for disassembling.
-:::
 
-:::warning
 1. After typing an invalid command or using a command which is not `si`, `cont`, `timetravel`, the debugger should not disassemble the program.
 2. Patched instructions like 0xcc (int3) should not appear in the output.
-:::
 
 ```
 (sdb) si
@@ -98,9 +92,7 @@ hello, world!
 
 The `cont` command continues the execution of the target program. The program should keep running until it terminates or hits a breakpoint.
 
-:::warning
 You can only use two `ptrace(PTRACE_SINGLE_STEP)` and two `int3` at most in the implementation of `cont`, or you will get 0 points.
-:::
 
 ```
 ** program './hello64' loaded. entry point 0x4000b0
@@ -155,12 +147,10 @@ A user can use `break <address in hexdecimal>` to set a breakpoint. The target p
 
 Sometimes you might see some bugs that are hard to replicate. Use the `anchor` command set a checkpoint and use the `timetravel` command to restore the process status. 
 
-:::info
 Hint:
 There are two ways to implement this feature.
 1. Snapshot the process memory and general purpose registers.
 2. Patch `fork` into the target process and stop the parent or child as the checkpoint.
-:::
 
 This functionality is inspired by the [Checkpoint/Restore In Userspace(CRIU)](https://criu.org/Main_Page). gdb also has a similar feature `checkpoint` which is implemented in a different way.
 
