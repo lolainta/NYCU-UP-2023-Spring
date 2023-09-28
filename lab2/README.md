@@ -2,8 +2,6 @@ UP23 Lab02
 ==========
 Date: 2023-03-13
 
-[TOC]
-
 # Find a Needle in a Haystack
 
 This lab aims to practice implementing a directory traversal program that finds a file containing a specific magic number from a target directory and its sub-directories. 
@@ -31,10 +29,8 @@ Note that the challenge server only checks the `stdout` from your solver. If you
 ## Uploading Your Solver
 
 To simplify the uploading process, you can use our provided `pwntools` python script to solve the pow and upload your solver binary executable. The upload script is available here ([view](https://up23.zoolab.org/code.html?file=up23/lab02/submit.py) | [download](https://up23.zoolab.org/up23/lab02/submit.py)). You have to place the `pow.py` file in the same directory and invoke the script by passing the path of your solver as the first parameter to the submission script.
- 
-:::warning
+
 Your solver must be compiled with the `-static` option.
-:::
 
 ## Grading
 
@@ -42,6 +38,4 @@ Your solver must be compiled with the `-static` option.
 
 - [85 pts] Your solver can find the correct file that contains the magic numbers requested by the challenge server.
 
-:::danger
 We have an execution time limit for your challenge. You have to solve the challenge within 60s.
-:::
