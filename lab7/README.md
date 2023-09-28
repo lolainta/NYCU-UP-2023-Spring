@@ -2,7 +2,6 @@ UP23 Lab07
 ==========
 Date: 2023-05-08
 
-[TOC]
 
 # One More Assembly Challenge: ROP Shell
 
@@ -46,9 +45,7 @@ Here are some hints for you. You can solve the challenge locally and then verify
 
 1. In the default setting, you can only fill the content of the stack and see how it can change the behavior or settings of the process. The major challenge is: *how do you allow more code submissions to the challenge server and read the FLAGs?*
 
-   :::info
    You may try to put your codes into the `code` array. It would much simply your implementation. However, it requires some tricks, and you have to think about how to do it.
-   :::
    
 1. Since the stack is writable but not executable, you can write ***return addresses*** and ***parameter values*** to the stack to manipulate the program workflow to achieve your goal. This is what we call ***return-oriented programming*** (ROP). Suppose you plan to invoke the `exit(0)` system call, the implementation in assembly would look like the following.
 
@@ -115,6 +112,4 @@ Here are some hints for you. You can solve the challenge locally and then verify
 
 - [25 pts] You can show the FLAG received from the internal network server.
 
-:::danger
 We have an execution time limit for your challenge. You have to solve the challenge within 60s.
-:::
