@@ -2,7 +2,6 @@ UP23 Lab08
 ==========
 Date: 2023-05-15
 
-[TOC]
 
 # Random Walk in a Forest
 
@@ -43,9 +42,7 @@ Here are some hints for you. You can solve the challenge locally and then verify
 
 1. There are several `oracle_*` functions in the sample code, but it doesn't matter how they are implemented.
 
-   :::danger
    Please notice that the `oracle_*` functions implemented in the sample codes may differ from those implemented on the server. Your solution should not depend on the `oracle_*` functions.
-   :::
 
 1. For each selected program flow, it always executes the following functions: one `oracle_connect`, one `oracle_reset`, several `oracle_update`s, and one `oracle_get_flag`. If the selected program flow is correct, the function call to `oracle_get_flag` prints out the `Bingo!` message for you. Otherwise, the `oracle_get_flag` function simply prints out a dot (`.`).
 
@@ -63,9 +60,7 @@ Here are some hints for you. You can solve the challenge locally and then verify
 
 1. The challenge server only accepts machine codes generated for Intel x86_64 CPU.
 
-:::danger
 Note that the qemu-static package on M1 does not support ptrace. You may need to find a x86_64 machine, e.g. Linux workstation in CS dept, to solve this challenge. 
-:::
 
 ## Grading
 
@@ -73,6 +68,4 @@ Note that the qemu-static package on M1 does not support ptrace. You may need to
 
 - [60 pts] You solver can solve the challenge on the server.
 
-:::danger
 We have an execution time limit for your challenge. You have to solve the challenge within 120s.
-:::
