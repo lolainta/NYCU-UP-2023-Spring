@@ -2,7 +2,6 @@ UP23 Lab05 (Pre-Lab Announcement)
 =================================
 Date: 2023-04-24
 
-[TOC]
 
 # Implement a Kernel Module
 
@@ -23,15 +22,11 @@ Our development package (including runtime and development files) can be found [
 
 You can develop the module on Apple chip macs but note that all the files must be cross-compiled to x86_64 architecture. Please read the rest of the lab instructions carefully before you implement this lab.
 
-:::info
 Our course video `file+stdio` has introduced how `ioctl` works with a kernel module. This lab extends it by implementing more features in the kernel module.
-:::
 
 UP23 Lab05
 ==========
 Date: 2023-04-24
-
-[TOC]
 
 # Does Sharing Memories Make Us Feel Closer?
 
@@ -52,9 +47,7 @@ Our development package (including runtime and development files) can be found [
 
 You can develop the module on Apple chip macs but note that all the files must be cross-compiled to x86_64 architecture. Please read the rest of the lab instructions carefully before you implement this lab.
 
-:::info
 Our course video `file+stdio` has introduced how `ioctl` works with a kernel module. This lab extends it by implementing more features in the kernel module.
-:::
 
 ## The Challenge Server
 
@@ -68,9 +61,7 @@ Upon connecting to the challenge server, you must first solve the Proof-of-Work 
 
 To simplify the uploading process, you can use our provided `pwntools` python script to solve the pow and upload your kernel module file. The upload script is available here ([view](https://up23.zoolab.org/code.html?file=up23/lab05/submit_e803f71b7df255232bc91b3bb1f94412.py) | [download](https://up23.zoolab.org/up23/lab05/submit_e803f71b7df255232bc91b3bb1f94412.py)). You have to place the `pow.py` file in the same directory and invoke the script by passing the path of your solver as the first parameter to the submission script.
 
-:::danger
 Please note that the submission script of this lab is ***different*** from other labs because the QEMU emulator outputs `\r\n` as its newline character instead of the typical `\n` on UNIX machines. To ensure that `pwntools` can correctly interpret lines returned from the server, we have an additional line `r.newline = b'\r\n'` in the script to interpret outputs properly.
-:::
 
 ## Specification
 
@@ -78,9 +69,7 @@ The specification of the kernel module is summarized as follows.
 
 1. The module has to ***automatically*** create 8 devices in `/dev` filesystem (from `kshram0` to `kshram7`). Each device corresponds to a kernel memory space of 4KB (default) allocated in the kernel using the [kzalloc](https://elixir.bootlin.com/linux/v6.2.6/source/include/linux/slab.h#L713) function. You may use an array of customized data structures to store your required information.
 
-   :::warning
    Note that `kzalloc` has several limits as mentioned here. For example, the maximal size of a chunk that can be allocated with `kzalloc` is limited. However, for simplicity, our test cases do not allocate more than the limitations.
-   :::
 
 1. Please remember to release allocated memories using the [kfree](https://elixir.bootlin.com/linux/v6.2.6/source/include/linux/slab.h#L211) function when you unload the module.
 
@@ -116,9 +105,7 @@ The specification of the kernel module is summarized as follows.
    - **`KSHRAM_SETSIZE`** resizes the size of the shared memory file based on the third parameter passed to the [`ioctl`](https://man7.org/linux/man-pages/man2/ioctl.2.html) function. Given an allocated memory pointer, you may resize it by using the [krealloc](https://elixir.bootlin.com/linux/v6.2.6/source/include/linux/slab.h#L210) function in the kernel. This command uses an additional argument to pass the size to be set.
 
 
-      :::warning
       Note that our test cases always resize a shared memory only when the shared memory is not in-use. 
-      :::
    
 1. Your module must support `mmap` file operation. In the `mmap` file operation, you have to map to memory allocated in the kernel to user-space addresses so that the user-space program can access it directly.
 
@@ -136,9 +123,7 @@ Here are some hints for you. You can implement your kernel module locally first 
 
 1. The required development files can be downloaded from [here (dist.tbz)](https://up23.zoolab.org/up23/lab05/dist.tbz). The archive contains a Linux kernel, an `initrd` filesystem, test executables, a script to run the emulator, and files required to build a kernel module.
 
-   :::info
    The kernel version we used in the development file archive is [6.2.6](https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.2.6.tar.xz).
-   :::
 
 1. Please install the qemu system emulator in your development platform. For Ubuntu-based dockers, you can install it using the command `apt install qemu-system-x86`. It would work on both Intel and Apple chips. You can even install the native one on Mac by using `brew install qemu`.
 
@@ -146,15 +131,11 @@ Here are some hints for you. You can implement your kernel module locally first 
 
 1. If you plan to have your files in the `initramfs` image, you can extract the files using [bzip2(1)](https://linux.die.net/man/1/bzip2) and [cpio(1)](https://linux.die.net/man/1/cpio) utilities, and re-pack the image using the same tools.
 
-   :::warning
    You may need to set the cpio format to `newc` format. Also please ensure that you pack all the required files in the image.
-   :::
    
 1. A sample `hello, world!` module is available [here (hellomod.tbz)](https://up23.zoolab.org/up23/lab05/hellomod.tbz). You may implement your module based on the `hello, world!` example. It has sample file operations and `/proc` file system implementations.
 
-   :::info
    In the `qemu` virtual machine runtime, you can use the commands `insmod` and `rmmod` to install and remove modules, respectively.
-   :::
    
 1. You can use a single device class to manage multiple devices. Based on the `hello, world` module, once you have created the class, you can then use the `device_create` function to create multiple devices. Note that the `device_create` accepts a format string for the device name. You may leverate it for easier device creation.
 
@@ -173,9 +154,7 @@ Here are some hints for you. You can implement your kernel module locally first 
 
 1. A kernel module can only call functions exported from the kernel using `EXPORT_*` macros. To have more flexibilities for calling (un-exported) kernel functions, our kernel has exported the [kallsyms_lookup_name](https://elixir.bootlin.com/linux/v6.2.6/source/kernel/kallsyms.c#L271) function. Similar to the [dlsym(3)](https://man7.org/linux/man-pages/man3/dlsym.3.html) function, you can use it to look up and resolve function symbols available in the kernel.
 
-   :::danger
    Note that you should not need the ***kallsyms_lookup_name*** function when implementing this module. We leave it here just in case you want to use it.
-   :::
 
 1. A successful running output from the challenge server should look like [this example](https://up23.zoolab.org/code.html?file=up23/lab05/output.txt).
 
@@ -217,6 +196,4 @@ We have eight demo items here. To demonstrate yourimplementation, you must *alwa
 
 1. [5 pts] Unloading the kernel module does not crash the system (***Module unload test #2***).
 
-:::danger
 We have an execution time limit for your kernel module. You have to pass the tests within 120s (kernel boot time inclusive).
-:::
