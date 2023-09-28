@@ -2,15 +2,12 @@ UP23 Lab03
 ==========
 Date: 2023-03-20
 
-[TOC]
 
 # Function Call Shuffling
 
 This lab aims to play with PLT/GOT table. Your mission is to ask our challenge server to output the lyrics for the well-known pop song *Keep the Faith* by *Michael Jackson* ([Watch the Video](https://youtu.be/uNKfDyi0eoM)).
 
-:::danger
 Please read the [instructions](#Lab-Instructions) carefully before you implement this lab. You may solve the challenge locally on Apple chip-based machines, but the files you submit to the challenge server must be compiled for x86_64 architecture.
-:::
 
 ## The Challenge Server
 
@@ -34,9 +31,8 @@ To simplify the uploading process, you can use our provided `pwntools` python sc
 
 This lab is a more complicated one (compared to previous ones), and, therefore, we provide a number of hints for you. We have prepared a modified sample challenge for you to solve locally, and then you can verify your solution on the challenge server. The directions of this lab are listed as follows.
 
-:::warning
 The local challenge only outputs a lot of "A" characters and verifies the checksum. It ***does not*** output the lyrics on the server.
-:::
+
 
 1. The source code of the local challenge is available here - `chals` ([view](https://up23.zoolab.org/code.html?file=up23/lab03/chals.c)) and the required runtime library `libpoem.so` ([header](https://up23.zoolab.org/code.html?file=up23/lab03/libpoem.h) and [source](https://up23.zoolab.org/code.html?file=up23/lab03/libpoem.c)). Alternatively, you can download everything from the [zip](https://up23.zoolab.org/up23/lab03/lab03_pub.zip) file. You may have to install the `libunwind-dev` package manually to use the `Makefile` in the zip directly.
 
@@ -74,9 +70,7 @@ The local challenge only outputs a lot of "A" characters and verifies the checks
    55c487259000-55c48725a000 rw-p 00018000 00:65 2630559  /chals
    ```
 
-   :::success
    Note that the main function address and the got table addresses of the sample `chals` are exactly the same as the one running on the server.
-   :::
 
 1. If you have pwntools installed, you can use the command `checksec` to inspect the `chals` program. The output should be
 
@@ -120,6 +114,4 @@ If you do not have a working x86_64 machine, you can still solve this challenge.
 - [70 pts] Your solver works with the challenge server. That is, submitting your solver implementation (`libsolver.so`) to the remote server can output the correct lyrics on the remote server.
  
 
-:::danger
 We have an execution time limit for your challenge. You have to solve the challenge within 60s.
-:::
